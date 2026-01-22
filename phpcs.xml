@@ -1,0 +1,36 @@
+<?xml version="1.0"?>
+<ruleset name="WordPress Plugin Coding Standards">
+    <description>
+        PHPCS configuration for WordPress.org plugin submission.
+        Ensures compliance with WordPress Coding Standards (WPCS).
+    </description>
+
+    <!-- Scan all PHP files in plugin -->
+    <file>./</file>
+
+    <!-- Exclude vendor and node_modules -->
+    <exclude-pattern>*/vendor/*</exclude-pattern>
+    <exclude-pattern>*/node_modules/*</exclude-pattern>
+
+    <!-- Use WordPress Coding Standards -->
+    <rule ref="WordPress-Core" />
+    <rule ref="WordPress-Docs" />
+    <rule ref="WordPress-Extra" />
+
+    <!-- Show warnings as errors (strict mode) -->
+    <config name="report_warnings" value="true"/>
+
+    <!-- Custom settings -->
+    <arg name="basepath" value="."/>
+    <arg name="colors"/>
+    <arg name="extensions" value="php"/>
+
+    <!-- Ignore minified JS/CSS -->
+    <exclude-pattern>*.min.js</exclude-pattern>
+    <exclude-pattern>*.min.css</exclude-pattern>
+
+    <!-- Allow long array syntax (WordPress prefers short arrays) -->
+    <rule ref="Generic.Arrays.DisallowLongArraySyntax">
+        <severity>0</severity>
+    </rule>
+</ruleset>
