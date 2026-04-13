@@ -1,7 +1,14 @@
 {
-  "name": "s3-media-sync/plugin",
-  "description": "WordPress plugin to sync media to S3-compatible storage",
+  "name": "codetot-huong/s3-media-sync",
+  "description": "WordPress plugin to sync media library to any S3-compatible storage",
   "type": "wordpress-plugin",
+  "license": "GPL-2.0-or-later",
+  "authors": [
+    {
+      "name": "codetot-huong",
+      "homepage": "https://github.com/codetot-huong"
+    }
+  ],
   "require": {
     "php": ">=7.4",
     "aws/aws-sdk-php": "^3.0"
@@ -10,5 +17,8 @@
     "psr-4": {
       "S3MediaSync\\": "includes/"
     }
+  },
+  "config": {
+    "optimize-autoloader": true
   }
 }

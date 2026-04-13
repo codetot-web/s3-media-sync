@@ -1,10 +1,16 @@
 <?php
 /**
  * Plugin Name: S3 Media Sync
- * Description: Sync WordPress media to S3-compatible storage (initial skeleton).
- * Version: 0.1.0
- * Author: Auto-generated
+ * Plugin URI:  https://github.com/codetot-huong/s3-media-sync
+ * Description: Sync WordPress media library to any S3-compatible storage (AWS S3, iDrive E2, MinIO, Cloudflare R2, etc.). Supports auto-upload on add, manual bulk sync, CDN URL rewriting, and local file cleanup.
+ * Version:     1.0.0
+ * Author:      codetot-huong
+ * Author URI:  https://github.com/codetot-huong
+ * License:     GPL-2.0-or-later
+ * License URI: https://www.gnu.org/licenses/gpl-2.0.html
  * Text Domain: s3-media-sync
+ * Requires at least: 5.8
+ * Requires PHP:      7.4
  */
 
 if ( ! defined( 'ABSPATH' ) ) {

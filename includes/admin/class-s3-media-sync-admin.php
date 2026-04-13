@@ -20,6 +20,7 @@ class S3_Media_Sync_Admin {
         add_action( 'wp_ajax_s3_media_sync_test_connection', array( $this, 'ajax_test_connection' ) );
         add_action( 'wp_ajax_s3_media_sync_sync_batch', array( $this, 'ajax_sync_batch' ) );
         add_action( 'wp_ajax_s3_media_sync_delete_local', array( $this, 'ajax_delete_local_batch' ) );
+        add_action( 'wp_ajax_s3_media_sync_reset_status', array( $this, 'ajax_reset_sync_status' ) );
     }
 
     public function add_admin_menu() {
@@ -50,7 +51,7 @@ class S3_Media_Sync_Admin {
             return;
         }
         $opts = get_option( 's3_media_sync_options', array() );
-        $nonce = wp_create_nonce( 's3_media_sync_test' );
+
             ?>
             <div class="wrap">
                 <h1>S3 Media Sync</h1>
@@ -83,6 +84,13 @@ class S3_Media_Sync_Admin {
                         </td>
                     </tr>
                     <tr>
+                        <th scope="row">Region</th>
+                        <td>
+                            <input type="text" name="s3_media_sync_options[region]" value="<?php echo esc_attr( isset( $opts['region'] ) ? $opts['region'] : 'us-east-1' ); ?>" class="regular-text" />
+                            <p class="description">AWS region (e.g. <code>us-east-1</code>, <code>ap-southeast-1</code>). For S3-compatible providers, try <code>us-east-1</code> if unsure.</p>
+                        </td>
+                    </tr>
+                    <tr>
                         <th scope="row">Endpoint</th>
                         <td>
                             <input type="text" name="s3_media_sync_options[endpoint]" value="<?php echo esc_attr( isset( $opts['endpoint'] ) ? $opts['endpoint'] : '' ); ?>" class="regular-text" />
@@ -94,6 +102,20 @@ class S3_Media_Sync_Admin {
                         <td>
                             <input type="text" name="s3_media_sync_options[public_url]" value="<?php echo esc_attr( isset( $opts['public_url'] ) ? $opts['public_url'] : '' ); ?>" class="regular-text" />
                             <p class="description">Optional — public base URL for your bucket (e.g. <code>https://o1o3.c15.e2-4.dev</code>). Do not include the bucket name in this value; the plugin will append the file path automatically. If you include the bucket, it will be detected and removed.</p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th scope="row">Delete local after upload</th>
+                        <td>
+                            <input type="checkbox" name="s3_media_sync_options[delete_after_upload]" value="1" <?php checked( 1, isset( $opts['delete_after_upload'] ) ? $opts['delete_after_upload'] : 0 ); ?> />
+                            <p class="description">Tự động xoá file local sau khi upload lên S3 thành công. Chỉ bật khi S3 đã hoạt động ổn định.</p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th scope="row">Disable SSL Verify</th>
+                        <td>
+                            <input type="checkbox" name="s3_media_sync_options[disable_ssl_verify]" value="1" <?php checked( 1, isset( $opts['disable_ssl_verify'] ) ? $opts['disable_ssl_verify'] : 0 ); ?> />
+                            <p class="description">Tắt kiểm tra SSL certificate. Dùng khi endpoint dùng cert tự ký hoặc cert hết hạn.</p>
                         </td>
                     </tr>
                     <tr>
@@ -117,10 +139,11 @@ class S3_Media_Sync_Admin {
         }
         wp_register_script( 's3-media-sync-admin', S3_MEDIA_SYNC_URL . 'assets/js/admin.js', array( 'jquery' ), S3_MEDIA_SYNC_VERSION, true );
         wp_localize_script( 's3-media-sync-admin', 'S3MediaSync', array(
-            'ajax_url' => admin_url( 'admin-ajax.php' ),
-            'nonce_test'    => wp_create_nonce( 's3_media_sync_test' ),
-            'nonce_sync'    => wp_create_nonce( 's3_media_sync_sync' ),
-            'nonce_delete'  => wp_create_nonce( 's3_media_sync_delete' ),
+            'ajax_url'     => admin_url( 'admin-ajax.php' ),
+            'nonce_test'   => wp_create_nonce( 's3_media_sync_test' ),
+            'nonce_sync'   => wp_create_nonce( 's3_media_sync_sync' ),
+            'nonce_delete' => wp_create_nonce( 's3_media_sync_delete' ),
+            'nonce_reset'  => wp_create_nonce( 's3_media_sync_reset' ),
         ) );
         wp_enqueue_script( 's3-media-sync-admin' );
     }
@@ -132,40 +155,24 @@ class S3_Media_Sync_Admin {
         check_ajax_referer( 's3_media_sync_test', 'nonce' );
 
         $posted = isset( $_POST['opts'] ) && is_array( $_POST['opts'] ) ? wp_unslash( $_POST['opts'] ) : array();
-        $opts = wp_parse_args( $posted, get_option( 's3_media_sync_options', array() ) );
+        $opts   = wp_parse_args( $posted, get_option( 's3_media_sync_options', array() ) );
 
-        $access = isset( $opts['access_key'] ) ? $opts['access_key'] : '';
-        $secret = isset( $opts['secret_key'] ) ? $opts['secret_key'] : '';
         $bucket = isset( $opts['bucket'] ) ? $opts['bucket'] : '';
-        $endpoint = isset( $opts['endpoint'] ) ? $opts['endpoint'] : '';
 
-        if ( empty( $access ) || empty( $secret ) || empty( $bucket ) ) {
+        if ( empty( $opts['access_key'] ) || empty( $opts['secret_key'] ) || empty( $bucket ) ) {
             wp_send_json_error( 'Please provide Access Key, Secret Key, and Bucket.' );
-        }
-
-        // Normalize endpoint: allow users to enter bare hostnames (no scheme)
-        $endpoint = trim( $endpoint );
-        if ( ! empty( $endpoint ) && ! preg_match( '#^https?://#i', $endpoint ) ) {
-            $endpoint = 'https://' . $endpoint;
         }
 
         if ( ! class_exists( '\\Aws\\S3\\S3Client' ) ) {
             wp_send_json_error( 'AWS SDK for PHP not found. Please install aws/aws-sdk-php via Composer.' );
         }
 
-        try {
-            $client = new \Aws\S3\S3Client( array_filter( array(
-                'version' => 'latest',
-                'region'  => 'us-east-1',
-                'credentials' => array(
-                    'key'    => $access,
-                    'secret' => $secret,
-                ),
-                'endpoint' => $endpoint ?: null,
-                'use_path_style_endpoint' => true,
-            ) ) );
+        $client = S3_Media_Sync::get_s3_client( $opts );
+        if ( ! $client ) {
+            wp_send_json_error( 'Could not create S3 client. Check your credentials.' );
+        }
 
-            // Attempt to head the bucket
+        try {
             $client->headBucket( array( 'Bucket' => $bucket ) );
             wp_send_json_success( 'Connection successful (bucket exists / accessible).' );
         } catch ( Exception $e ) {
@@ -185,6 +192,7 @@ class S3_Media_Sync_Admin {
             <p>
                 <button id="s3-media-sync-sync" class="button button-primary">Start Manual Sync to S3</button>
                 <button id="s3-media-sync-stop" class="button">Stop</button>
+                <button id="s3-media-sync-reset-offset" class="button" style="margin-left:8px;">Reset offset (sync từ đầu)</button>
             </p>
             <div style="width:100%;max-width:700px;margin-top:12px;">
                 <div id="s3-media-sync-progress" style="background:#eee;border:1px solid #ddd;height:18px;position:relative;">
@@ -198,6 +206,12 @@ class S3_Media_Sync_Admin {
                 <button id="s3-media-sync-delete-local" class="button button-primary">Delete Local Media (synced only)</button>
                 <button id="s3-media-sync-stop-delete" class="button" style="display:none;">Stop Delete</button>
             </p>
+            <h2 style="margin-top:18px;">Reset Sync Status</h2>
+            <p>Xoá toàn bộ meta <code>s3_media_sync_synced</code> — tất cả file sẽ được coi là chưa sync và có thể chạy lại Manual Sync từ đầu.</p>
+            <p>
+                <button id="s3-media-sync-reset" class="button button-secondary">Reset Sync Status</button>
+                <span id="s3-media-sync-reset-result" style="margin-left:12px;font-size:13px;"></span>
+            </p>
         </div>
         <?php
     }
@@ -208,42 +222,54 @@ class S3_Media_Sync_Admin {
         }
         check_ajax_referer( 's3_media_sync_sync', 'nonce' );
 
-        $offset = isset( $_POST['offset'] ) ? intval( $_POST['offset'] ) : 0;
-        $batch  = isset( $_POST['batch_size'] ) ? intval( $_POST['batch_size'] ) : 10;
-        $batch  = max(1, min(50, $batch));
+        @ini_set( 'memory_limit', '512M' );
+        @ini_set( 'max_execution_time', '300' );
+        @set_time_limit( 300 );
 
-        // Query attachments with pagination and get total count
-        $q = new WP_Query( array(
-            'post_type' => 'attachment',
-            'post_status' => 'inherit',
-            'posts_per_page' => $batch,
-            'offset' => $offset,
-            'fields' => 'ids',
-            'no_found_rows' => false,
+        $last_id = isset( $_POST['last_id'] ) ? intval( $_POST['last_id'] ) : 0;
+        $total   = isset( $_POST['total'] )   ? intval( $_POST['total'] )   : 0;
+        $batch   = isset( $_POST['batch_size'] ) ? intval( $_POST['batch_size'] ) : 5;
+        $batch   = max(1, min(50, $batch));
+
+        global $wpdb;
+
+        // Get total only on first batch (total=0), cache result in transient
+        if ( $total === 0 ) {
+            $total = (int) get_transient( 's3_sync_total' );
+            if ( ! $total ) {
+                $total = (int) $wpdb->get_var(
+                    "SELECT COUNT(*) FROM {$wpdb->posts} p
+                     INNER JOIN {$wpdb->postmeta} pm ON pm.post_id = p.ID AND pm.meta_key = '_wp_attached_file'
+                     WHERE p.post_type = 'attachment' AND p.post_status = 'inherit'"
+                );
+                set_transient( 's3_sync_total', $total, HOUR_IN_SECONDS );
+            }
+        }
+
+        // Fast ID-based pagination using primary key
+        $ids = $wpdb->get_col( $wpdb->prepare(
+            "SELECT p.ID FROM {$wpdb->posts} p
+             INNER JOIN {$wpdb->postmeta} pm ON pm.post_id = p.ID AND pm.meta_key = '_wp_attached_file'
+             WHERE p.post_type = 'attachment' AND p.post_status = 'inherit'
+             AND p.ID > %d
+             ORDER BY p.ID ASC
+             LIMIT %d",
+            $last_id, $batch
         ) );
 
-        $total = (int) $q->found_posts;
-        $ids = (array) $q->posts;
-
-        if ( $total === 0 ) {
+        if ( empty( $ids ) ) {
+            delete_transient( 's3_sync_total' );
             wp_send_json_success( array(
-                'message' => 'No attachments found to sync.',
-                'offset' => 0,
-                'total' => 0,
-                'percent' => 100,
+                'done'    => true,
+                'last_id' => $last_id,
+                'total'   => $total,
             ) );
         }
 
-        $opts = get_option( 's3_media_sync_options', array() );
-        $access = isset( $opts['access_key'] ) ? $opts['access_key'] : '';
-        $secret = isset( $opts['secret_key'] ) ? $opts['secret_key'] : '';
+        $opts   = get_option( 's3_media_sync_options', array() );
         $bucket = isset( $opts['bucket'] ) ? $opts['bucket'] : '';
-        $endpoint = isset( $opts['endpoint'] ) ? trim( $opts['endpoint'] ) : '';
-        if ( ! empty( $endpoint ) && ! preg_match( '#^https?://#i', $endpoint ) ) {
-            $endpoint = 'https://' . $endpoint;
-        }
 
-        if ( empty( $access ) || empty( $secret ) || empty( $bucket ) ) {
+        if ( empty( $opts['access_key'] ) || empty( $opts['secret_key'] ) || empty( $bucket ) ) {
             wp_send_json_error( 'Please configure Access Key, Secret Key, and Bucket in settings.' );
         }
 
@@ -251,19 +277,9 @@ class S3_Media_Sync_Admin {
             wp_send_json_error( 'AWS SDK for PHP not found. Please install aws/aws-sdk-php via Composer.' );
         }
 
-        try {
-            $client = new \Aws\S3\S3Client( array_filter( array(
-                'version' => 'latest',
-                'region'  => 'us-east-1',
-                'credentials' => array(
-                    'key'    => $access,
-                    'secret' => $secret,
-                ),
-                'endpoint' => $endpoint ?: null,
-                'use_path_style_endpoint' => true,
-            ) ) );
-        } catch ( Exception $e ) {
-            wp_send_json_error( 'Could not create S3 client: ' . $e->getMessage() );
+        $client = S3_Media_Sync::get_s3_client( $opts );
+        if ( ! $client ) {
+            wp_send_json_error( 'Could not create S3 client. Check your credentials.' );
         }
 
         $uploads = wp_get_upload_dir();
@@ -271,33 +287,46 @@ class S3_Media_Sync_Admin {
 
         $processed = 0;
         $succeeded = 0;
-        $errors = array();
+        $skipped   = 0;
+        $missing   = 0;
+        $errors    = array();
 
         foreach ( $ids as $id ) {
             $file = get_attached_file( $id );
             if ( ! $file || ! file_exists( $file ) ) {
                 $processed++;
+                $missing++;
                 continue;
             }
 
             $relative = ltrim( str_replace( $base, '', $file ), '/\\' );
             $key = $relative;
 
+            // Skip if already synced: check post meta first (fast), then verify on S3 (safe)
+            if ( get_post_meta( $id, 's3_media_sync_synced', true ) ) {
+                $processed++;
+                $skipped++;
+                continue;
+            }
+
+
             $attachment_ok = false;
 
             try {
                 $client->putObject( array(
-                    'Bucket' => $bucket,
-                    'Key'    => $key,
+                    'Bucket'     => $bucket,
+                    'Key'        => $key,
                     'SourceFile' => $file,
                 ) );
                 $succeeded++;
                 $attachment_ok = true;
             } catch ( Exception $e ) {
-                $errors[] = sprintf( 'ID %d (original): %s', $id, $e->getMessage() );
+                $msg = sprintf( 'ID %d (original): %s', $id, $e->getMessage() );
+                $errors[] = $msg;
+                error_log( '[s3-media-sync] Sync error: ' . $msg );
             }
 
-            // Try to upload intermediate sizes if metadata exists
+            // Upload intermediate sizes
             $meta = wp_get_attachment_metadata( $id );
             if ( $meta && ! empty( $meta['sizes'] ) && isset( $meta['file'] ) ) {
                 $meta_dir = dirname( $meta['file'] );
@@ -305,15 +334,17 @@ class S3_Media_Sync_Admin {
                     if ( empty( $size_meta['file'] ) ) {
                         continue;
                     }
-                    $size_rel = ltrim( $meta_dir . '/' . $size_meta['file'], '/\\' );
+                    $size_rel  = $meta_dir === '.'
+                        ? $size_meta['file']
+                        : ltrim( $meta_dir . '/' . $size_meta['file'], '/\\' );
                     $size_full = $base . '/' . $size_rel;
                     if ( ! file_exists( $size_full ) ) {
                         continue;
                     }
                     try {
                         $client->putObject( array(
-                            'Bucket' => $bucket,
-                            'Key'    => $size_rel,
+                            'Bucket'     => $bucket,
+                            'Key'        => $size_rel,
                             'SourceFile' => $size_full,
                         ) );
                     } catch ( Exception $e ) {
@@ -322,7 +353,6 @@ class S3_Media_Sync_Admin {
                 }
             }
 
-            // Mark attachment as synced if original uploaded successfully
             if ( $attachment_ok ) {
                 update_post_meta( $id, 's3_media_sync_synced', time() );
             }
@@ -330,16 +360,16 @@ class S3_Media_Sync_Admin {
             $processed++;
         }
 
-        $next_offset = $offset + count( $ids );
-        $percent = $total > 0 ? round( ( $next_offset / $total ) * 100 ) : 100;
+        $new_last_id = max( $ids );
 
         wp_send_json_success( array(
-            'processed' => $processed,
+            'done'      => false,
             'succeeded' => $succeeded,
-            'errors' => $errors,
-            'offset' => $next_offset,
-            'total' => $total,
-            'percent' => $percent,
+            'skipped'   => $skipped,
+            'missing'   => $missing,
+            'errors'    => $errors,
+            'last_id'   => $new_last_id,
+            'total'     => $total,
         ) );
     }
 
@@ -403,7 +433,7 @@ class S3_Media_Sync_Admin {
             $meta = wp_get_attachment_metadata( $id );
             if ( $meta && ! empty( $meta['sizes'] ) && isset( $meta['file'] ) ) {
                 $meta_dir = dirname( $meta['file'] );
-                foreach ( $meta['sizes'] as $size_name => $size_meta ) {
+                foreach ( $meta['sizes'] as $size_meta ) {
                     if ( empty( $size_meta['file'] ) ) {
                         continue;
                     }
@@ -413,7 +443,7 @@ class S3_Media_Sync_Admin {
                         if ( @unlink( $size_full ) ) {
                             $deleted_any = true;
                         } else {
-                            $errors[] = sprintf( 'ID %d: could not delete size %s', $id, $size_full );
+                            $errors[] = sprintf( 'ID %d: could not delete %s', $id, $size_full );
                         }
                     }
                 }
@@ -438,5 +468,18 @@ class S3_Media_Sync_Admin {
             'total' => $total,
             'percent' => $percent,
         ) );
+    }
+
+    public function ajax_reset_sync_status() {
+        if ( ! current_user_can( 'manage_options' ) ) {
+            wp_send_json_error( 'Insufficient permissions' );
+        }
+        check_ajax_referer( 's3_media_sync_reset', 'nonce' );
+
+        global $wpdb;
+        $deleted = $wpdb->delete( $wpdb->postmeta, array( 'meta_key' => 's3_media_sync_synced' ) );
+        $wpdb->delete( $wpdb->postmeta, array( 'meta_key' => 's3_media_sync_local_removed' ) );
+
+        wp_send_json_success( 'Reset xong. Đã xoá sync status của ' . intval( $deleted ) . ' file.' );
     }
 }
