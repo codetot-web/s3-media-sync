@@ -15,12 +15,22 @@ class S3_Media_Sync_Admin {
 
     private function __construct() {
         add_action( 'admin_menu', array( $this, 'add_admin_menu' ) );
+        add_action( 'admin_init', array( $this, 'load_synced_table_class' ) );
         add_action( 'admin_init', array( $this, 'register_settings' ) );
         add_action( 'admin_enqueue_scripts', array( $this, 'enqueue_assets' ) );
         add_action( 'wp_ajax_s3_media_sync_test_connection', array( $this, 'ajax_test_connection' ) );
         add_action( 'wp_ajax_s3_media_sync_sync_batch', array( $this, 'ajax_sync_batch' ) );
         add_action( 'wp_ajax_s3_media_sync_delete_local', array( $this, 'ajax_delete_local_batch' ) );
         add_action( 'wp_ajax_s3_media_sync_reset_status', array( $this, 'ajax_reset_sync_status' ) );
+        add_action( 'wp_ajax_s3_media_sync_bg_start',        array( $this, 'ajax_bg_start' ) );
+        add_action( 'wp_ajax_s3_media_sync_bg_stop',         array( $this, 'ajax_bg_stop' ) );
+        add_action( 'wp_ajax_s3_media_sync_bg_status',       array( $this, 'ajax_bg_status' ) );
+        add_action( 'wp_ajax_s3_media_sync_bg_reset_offset', array( $this, 'ajax_bg_reset_offset' ) );
+        add_action( 'wp_ajax_s3_media_sync_bg_clear_all',   array( $this, 'ajax_bg_clear_all' ) );
+    }
+
+    public function load_synced_table_class() {
+        require_once S3_MEDIA_SYNC_PATH . 'includes/admin/class-s3-media-sync-synced-table.php';
     }
 
     public function add_admin_menu() {
@@ -39,6 +49,15 @@ class S3_Media_Sync_Admin {
             'manage_options',
             's3-media-sync-tools',
             array( $this, 'tools_page' )
+        );
+        // Synced Media list
+        add_submenu_page(
+            'upload.php',
+            'S3 Synced Media',
+            'S3 Synced Media',
+            'manage_options',
+            's3-media-sync-synced',
+            array( $this, 'synced_media_page' )
         );
     }
 
@@ -132,6 +151,30 @@ class S3_Media_Sync_Admin {
         <?php
     }
 
+    public function synced_media_page() {
+        if ( ! current_user_can( 'manage_options' ) ) {
+            return;
+        }
+
+        require_once S3_MEDIA_SYNC_PATH . 'includes/admin/class-s3-media-sync-synced-table.php';
+
+        $table = new S3_Media_Sync_Synced_Table();
+        $table->prepare_items();
+
+        $search = isset( $_REQUEST['s'] ) ? sanitize_text_field( wp_unslash( $_REQUEST['s'] ) ) : '';
+        ?>
+        <div class="wrap">
+            <h1 class="wp-heading-inline">S3 Synced Media</h1>
+            <hr class="wp-header-end">
+            <form method="get">
+                <input type="hidden" name="page" value="s3-media-sync-synced">
+                <?php $table->search_box( 'Search files', 's3-media-sync-search' ); ?>
+                <?php $table->display(); ?>
+            </form>
+        </div>
+        <?php
+    }
+
     public function enqueue_assets( $hook ) {
         $allowed = array( 'settings_page_s3-media-sync', 'tools_page_s3-media-sync-tools' );
         if ( ! in_array( $hook, $allowed, true ) ) {
@@ -144,6 +187,7 @@ class S3_Media_Sync_Admin {
             'nonce_sync'   => wp_create_nonce( 's3_media_sync_sync' ),
             'nonce_delete' => wp_create_nonce( 's3_media_sync_delete' ),
             'nonce_reset'  => wp_create_nonce( 's3_media_sync_reset' ),
+            'nonce_bg'     => wp_create_nonce( 's3_media_sync_bg' ),
         ) );
         wp_enqueue_script( 's3-media-sync-admin' );
     }
@@ -187,7 +231,40 @@ class S3_Media_Sync_Admin {
         ?>
         <div class="wrap">
             <h1>S3 Media Sync Tools</h1>
-			<h2 style="margin-top:18px;">Manual Sync</h2>
+	            <?php
+            $bg_state = get_option( 's3_bg_sync_state', array() );
+            if ( ! empty( $bg_state ) ) {
+                $color = array( 'running' => '#0073aa', 'done' => '#00a32a', 'stopped' => '#888', 'error' => '#d63638' );
+                $c = isset( $color[ $bg_state['status'] ] ) ? $color[ $bg_state['status'] ] : '#888';
+                echo '<div style="background:#f0f0f0;border-left:4px solid ' . esc_attr( $c ) . ';padding:10px 14px;margin-bottom:16px;font-size:13px;">';
+                echo '<strong>BG Sync State:</strong> <span style="color:' . esc_attr( $c ) . '">' . esc_html( strtoupper( $bg_state['status'] ) ) . '</span> &nbsp;|&nbsp; ';
+                echo 'Total: <strong>' . (int) ( $bg_state['total'] ?? 0 ) . '</strong> &nbsp;|&nbsp; ';
+                echo 'Processed: <strong>' . (int) ( $bg_state['processed'] ?? 0 ) . '</strong> &nbsp;|&nbsp; ';
+                echo 'Uploaded: <strong style="color:#00a32a">' . (int) ( $bg_state['succeeded'] ?? 0 ) . '</strong> &nbsp;|&nbsp; ';
+                echo 'Skipped: <strong>' . (int) ( $bg_state['skipped'] ?? 0 ) . '</strong> &nbsp;|&nbsp; ';
+                echo 'Missing: <strong>' . (int) ( $bg_state['missing'] ?? 0 ) . '</strong> &nbsp;|&nbsp; ';
+                echo 'Errors: <strong style="color:#d63638">' . (int) ( $bg_state['errors'] ?? 0 ) . '</strong>';
+                if ( ! empty( $bg_state['last_error'] ) ) {
+                    echo '<br><span style="color:#d63638">Last error: ' . esc_html( $bg_state['last_error'] ) . '</span>';
+                }
+                echo '</div>';
+            }
+            ?>
+            <h2>Background Sync (Server-side)</h2>
+            <p>Sync runs entirely on the server via WP-Cron — you can close this tab and it will continue.</p>
+            <p>
+                <button id="s3-bg-start" class="button button-primary">Start Background Sync</button>
+                <button id="s3-bg-stop" class="button" style="display:none;">Stop</button>
+                <button id="s3-bg-clear" class="button button-secondary" style="margin-left:8px;color:#d63638;border-color:#d63638;">Stop &amp; Clear All (reset)</button>
+            </p>
+            <div style="width:100%;max-width:700px;margin-top:12px;">
+                <div style="background:#eee;border:1px solid #ddd;height:18px;position:relative;">
+                    <div id="s3-bg-progress-bar" style="background:#46b450;height:100%;width:0%;transition:width .4s;"></div>
+                </div>
+                <div id="s3-bg-status" style="margin-top:8px;font-size:13px;color:#333;"></div>
+            </div>
+            <hr style="margin:24px 0;">
+            <h2 style="margin-top:18px;">Manual Sync</h2>
             <p>Run a manual sync of attachments to your configured S3 bucket. This processes in batches to avoid timeouts.</p>
             <p>
                 <button id="s3-media-sync-sync" class="button button-primary">Start Manual Sync to S3</button>
@@ -470,6 +547,133 @@ class S3_Media_Sync_Admin {
         ) );
     }
 
+    public function ajax_bg_start() {
+        if ( ! current_user_can( 'manage_options' ) ) {
+            wp_send_json_error( 'Insufficient permissions' );
+        }
+        check_ajax_referer( 's3_media_sync_bg', 'nonce' );
+
+        // Count total attachments once
+        global $wpdb;
+        $total = (int) $wpdb->get_var(
+            "SELECT COUNT(*) FROM {$wpdb->posts} p
+             INNER JOIN {$wpdb->postmeta} pm ON pm.post_id = p.ID AND pm.meta_key = '_wp_attached_file'
+             WHERE p.post_type = 'attachment' AND p.post_status = 'inherit'"
+        );
+
+        $state = array(
+            'status'     => 'running',
+            'last_id'    => 0,
+            'total'      => $total,
+            'processed'  => 0,
+            'succeeded'  => 0,
+            'skipped'    => 0,
+            'missing'    => 0,
+            'errors'     => 0,
+            'last_error' => '',
+            'started_at' => time(),
+            'updated_at' => time(),
+        );
+        update_option( 's3_bg_sync_state', $state );
+
+        // Clear any previously scheduled event and schedule the first batch
+        wp_clear_scheduled_hook( 's3_media_sync_bg_batch' );
+        if ( function_exists( 'as_unschedule_all_actions' ) ) {
+            as_unschedule_all_actions( 's3_media_sync_bg_batch', array(), 's3-media-sync' );
+            as_schedule_single_action( time() + 1, 's3_media_sync_bg_batch', array(), 's3-media-sync' );
+        } else {
+            wp_schedule_single_event( time() + 1, 's3_media_sync_bg_batch' );
+        }
+
+        wp_send_json_success( $state );
+    }
+
+    public function ajax_bg_stop() {
+        if ( ! current_user_can( 'manage_options' ) ) {
+            wp_send_json_error( 'Insufficient permissions' );
+        }
+        check_ajax_referer( 's3_media_sync_bg', 'nonce' );
+
+        $state = get_option( 's3_bg_sync_state', array() );
+        if ( ! empty( $state ) ) {
+            $state['status']     = 'stopped';
+            $state['updated_at'] = time();
+            update_option( 's3_bg_sync_state', $state );
+        }
+
+        // Cancel WP-Cron events
+        wp_clear_scheduled_hook( 's3_media_sync_bg_batch' );
+
+        // Cancel Action Scheduler pending actions (WooCommerce)
+        if ( function_exists( 'as_unschedule_all_actions' ) ) {
+            as_unschedule_all_actions( 's3_media_sync_bg_batch', array(), 's3-media-sync' );
+        }
+
+        wp_send_json_success( $state );
+    }
+
+    public function ajax_bg_clear_all() {
+        if ( ! current_user_can( 'manage_options' ) ) {
+            wp_send_json_error( 'Insufficient permissions' );
+        }
+        check_ajax_referer( 's3_media_sync_bg', 'nonce' );
+
+        // Cancel all pending/running Action Scheduler actions
+        if ( function_exists( 'as_unschedule_all_actions' ) ) {
+            as_unschedule_all_actions( 's3_media_sync_bg_batch', array(), 's3-media-sync' );
+        }
+        wp_clear_scheduled_hook( 's3_media_sync_bg_batch' );
+
+        // Reset BG state
+        delete_option( 's3_bg_sync_state' );
+
+        // Delete meta via WordPress API so object cache (Redis/Memcached) is properly cleared
+        $deleted = (int) delete_metadata( 'post', 0, 's3_media_sync_synced', '', true );
+        delete_metadata( 'post', 0, 's3_media_sync_local_removed', '', true );
+        wp_cache_flush();
+
+        wp_send_json_success( array(
+            'message' => 'Stopped & cleared. Reset ' . $deleted . ' synced files. Ready to start fresh.',
+        ) );
+    }
+
+    public function ajax_bg_reset_offset() {
+        if ( ! current_user_can( 'manage_options' ) ) {
+            wp_send_json_error( 'Insufficient permissions' );
+        }
+        check_ajax_referer( 's3_media_sync_bg', 'nonce' );
+
+        wp_clear_scheduled_hook( 's3_media_sync_bg_batch' );
+
+        $state = get_option( 's3_bg_sync_state', array() );
+        if ( ! empty( $state ) ) {
+            $state['last_id']   = 0;
+            $state['processed'] = 0;
+            $state['succeeded'] = 0;
+            $state['skipped']   = 0;
+            $state['missing']   = 0;
+            $state['errors']    = 0;
+            $state['status']    = 'stopped';
+            $state['updated_at'] = time();
+            update_option( 's3_bg_sync_state', $state );
+        }
+
+        wp_send_json_success( 'Background sync offset reset. Click Start to sync from the beginning.' );
+    }
+
+    public function ajax_bg_status() {
+        if ( ! current_user_can( 'manage_options' ) ) {
+            wp_send_json_error( 'Insufficient permissions' );
+        }
+        check_ajax_referer( 's3_media_sync_bg', 'nonce' );
+
+        $state = get_option( 's3_bg_sync_state', array() );
+        if ( empty( $state ) ) {
+            wp_send_json_success( array( 'status' => 'idle' ) );
+        }
+        wp_send_json_success( $state );
+    }
+
     public function ajax_reset_sync_status() {
         if ( ! current_user_can( 'manage_options' ) ) {
             wp_send_json_error( 'Insufficient permissions' );
@@ -480,6 +684,10 @@ class S3_Media_Sync_Admin {
         $deleted = $wpdb->delete( $wpdb->postmeta, array( 'meta_key' => 's3_media_sync_synced' ) );
         $wpdb->delete( $wpdb->postmeta, array( 'meta_key' => 's3_media_sync_local_removed' ) );
 
-        wp_send_json_success( 'Reset xong. Đã xoá sync status của ' . intval( $deleted ) . ' file.' );
+        // Also reset background sync state so BG re-syncs from the beginning
+        wp_clear_scheduled_hook( 's3_media_sync_bg_batch' );
+        delete_option( 's3_bg_sync_state' );
+
+        wp_send_json_success( 'Reset xong. Đã xoá sync status của ' . intval( $deleted ) . ' file. Background sync cũng được reset.' );
     }
 }

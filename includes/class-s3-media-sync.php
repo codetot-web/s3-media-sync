@@ -26,6 +26,7 @@ class S3_Media_Sync {
         add_filter( 'wpseo_opengraph_image', array( $this, 'filter_generic_upload_url' ) );
         add_filter( 'wpseo_twitter_image', array( $this, 'filter_generic_upload_url' ) );
         add_action( 'admin_init', array( $this, 'register_settings' ) );
+        add_action( 's3_media_sync_bg_batch', array( $this, 'run_bg_batch' ) );
     }
 
     public static function activate() {
@@ -396,6 +397,140 @@ class S3_Media_Sync {
             },
             $str
         );
+    }
+
+    /**
+     * WP-Cron callback: process one batch of attachments in the background.
+     * Schedules the next batch automatically until all attachments are synced.
+     *
+     * State is stored in option 's3_bg_sync_state':
+     *   status     running|stopped|done|error
+     *   last_id    highest attachment ID processed so far
+     *   total      total attachments (counted once on start)
+     *   processed  attachments attempted so far
+     *   succeeded  uploads OK
+     *   skipped    already synced (has meta)
+     *   missing    file not found on disk
+     *   errors     upload failures
+     *   started_at unix timestamp
+     *   updated_at unix timestamp
+     */
+    public function run_bg_batch() {
+        $state = get_option( 's3_bg_sync_state', array() );
+
+        if ( empty( $state ) || in_array( $state['status'], array( 'stopped', 'done', 'error' ), true ) ) {
+            return;
+        }
+
+        $opts   = get_option( 's3_media_sync_options', array() );
+        $bucket = isset( $opts['bucket'] ) ? $opts['bucket'] : '';
+        $client = self::get_s3_client( $opts );
+
+        if ( ! $client || ! $bucket ) {
+            $state['status']     = 'error';
+            $state['last_error'] = 'S3 client not configured — check credentials and bucket.';
+            $state['updated_at'] = time();
+            update_option( 's3_bg_sync_state', $state );
+            return;
+        }
+
+        global $wpdb;
+
+        $last_id    = isset( $state['last_id'] ) ? (int) $state['last_id'] : 0;
+        $batch_size = 10;
+
+        $ids = $wpdb->get_col( $wpdb->prepare(
+            "SELECT p.ID FROM {$wpdb->posts} p
+             INNER JOIN {$wpdb->postmeta} pm ON pm.post_id = p.ID AND pm.meta_key = '_wp_attached_file'
+             WHERE p.post_type = 'attachment' AND p.post_status = 'inherit'
+             AND p.ID > %d
+             ORDER BY p.ID ASC
+             LIMIT %d",
+            $last_id, $batch_size
+        ) );
+
+        if ( empty( $ids ) ) {
+            $state['status']      = 'done';
+            $state['updated_at']  = time();
+            update_option( 's3_bg_sync_state', $state );
+            return;
+        }
+
+        $uploads = wp_get_upload_dir();
+        $base    = untrailingslashit( $uploads['basedir'] );
+
+        foreach ( $ids as $id ) {
+            if ( get_post_meta( $id, 's3_media_sync_synced', true ) ) {
+                $state['skipped']++;
+                $state['processed']++;
+                continue;
+            }
+
+            $file = get_attached_file( $id );
+            if ( ! $file || ! file_exists( $file ) ) {
+                $state['missing']++;
+                $state['processed']++;
+                continue;
+            }
+
+            $relative = ltrim( str_replace( $base, '', $file ), '/\\' );
+            $ok       = false;
+
+            try {
+                $client->putObject( array(
+                    'Bucket'     => $bucket,
+                    'Key'        => $relative,
+                    'SourceFile' => $file,
+                ) );
+                $ok = true;
+                $state['succeeded']++;
+            } catch ( Exception $e ) {
+                $state['errors']++;
+                error_log( '[s3-media-sync bg] ' . $e->getMessage() );
+            }
+
+            // Upload resized sizes
+            $meta = wp_get_attachment_metadata( $id );
+            if ( $meta && ! empty( $meta['sizes'] ) && isset( $meta['file'] ) ) {
+                $meta_dir = dirname( $meta['file'] );
+                foreach ( $meta['sizes'] as $size_name => $size_meta ) {
+                    if ( empty( $size_meta['file'] ) ) {
+                        continue;
+                    }
+                    $size_rel  = $meta_dir === '.' ? $size_meta['file'] : ltrim( $meta_dir . '/' . $size_meta['file'], '/\\' );
+                    $size_full = $base . '/' . $size_rel;
+                    if ( ! file_exists( $size_full ) ) {
+                        continue;
+                    }
+                    try {
+                        $client->putObject( array(
+                            'Bucket'     => $bucket,
+                            'Key'        => $size_rel,
+                            'SourceFile' => $size_full,
+                        ) );
+                    } catch ( Exception $e ) {
+                        error_log( '[s3-media-sync bg] size ' . $size_name . ': ' . $e->getMessage() );
+                    }
+                }
+            }
+
+            if ( $ok ) {
+                update_post_meta( $id, 's3_media_sync_synced', time() );
+            }
+
+            $state['processed']++;
+        }
+
+        $state['last_id']    = (int) max( $ids );
+        $state['updated_at'] = time();
+        update_option( 's3_bg_sync_state', $state );
+
+        // Schedule next batch — use Action Scheduler if available, else WP-Cron
+        if ( function_exists( 'as_schedule_single_action' ) ) {
+            as_schedule_single_action( time() + 5, 's3_media_sync_bg_batch', array(), 's3-media-sync' );
+        } else {
+            wp_schedule_single_event( time() + 5, 's3_media_sync_bg_batch' );
+        }
     }
 
     private function get_s3_url_from_file( $file ) {
