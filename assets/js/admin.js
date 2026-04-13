@@ -186,8 +186,16 @@
         $('#s3-media-sync-reset-offset').on('click', function(e){
             e.preventDefault();
             if (syncing) return;
+            // Reset manual sync offset (browser)
             localStorage.removeItem('s3_sync_last_id');
-            updateProgress(0, 'Đã reset. Bấm Start để sync từ đầu.');
+            updateProgress(0, 'Manual sync offset reset.');
+            // Also reset background sync offset (server DB)
+            $.post(S3MediaSync.ajax_url, {
+                action: 's3_media_sync_bg_reset_offset',
+                nonce:  S3MediaSync.nonce_bg
+            }, function() {
+                bgUpdateUI({ status: 'stopped', processed: 0, succeeded: 0, skipped: 0, missing: 0, errors: 0, total: 0 });
+            });
         });
 
         // ── Delete Local Media ────────────────────────────────────────────────
@@ -266,6 +274,108 @@
             stopDeleteRequested = true;
             $(this).prop('disabled', true);
         });
+
+        // ── Background Sync (WP-Cron) ────────────────────────────────────────
+        var bgPollTimer = null;
+
+        function bgStatusText( state ) {
+            if ( ! state || state.status === 'idle' ) return 'No background sync running.';
+            var msg = '[' + state.status.toUpperCase() + '] '
+                + 'Uploaded: ' + ( state.succeeded || 0 )
+                + ' / ' + ( state.total || '?' )
+                + ' | Skipped: ' + ( state.skipped || 0 )
+                + ( state.missing ? ' | Missing: ' + state.missing : '' )
+                + ( state.errors  ? ' | Errors: '  + state.errors  : '' );
+            if ( state.status === 'done' )    msg = 'Done! ' + msg;
+            if ( state.status === 'stopped' ) msg = 'Stopped. ' + msg;
+            if ( state.status === 'error' )   msg = 'Error: ' + ( state.last_error || '' );
+            return msg + ( state.updated_at ? ' (last update: ' + new Date( state.updated_at * 1000 ).toLocaleTimeString() + ')' : '' );
+        }
+
+        function bgUpdateUI( state ) {
+            var pct = ( state && state.total > 0 )
+                ? Math.round( ( state.processed || 0 ) / state.total * 100 )
+                : 0;
+            $('#s3-bg-progress-bar').css( 'width', pct + '%' );
+            $('#s3-bg-status').text( bgStatusText( state ) );
+
+            var running = state && state.status === 'running';
+            $('#s3-bg-start').prop( 'disabled', running ).text( running ? 'Running...' : 'Start Background Sync' );
+            $('#s3-bg-stop').toggle( running );
+        }
+
+        function bgPoll() {
+            $.post( S3MediaSync.ajax_url, {
+                action: 's3_media_sync_bg_status',
+                nonce:  S3MediaSync.nonce_bg
+            }, function( resp ) {
+                if ( ! resp || ! resp.success ) return;
+                var state = resp.data;
+                bgUpdateUI( state );
+                if ( state.status === 'running' ) {
+                    bgPollTimer = setTimeout( bgPoll, 4000 );
+                } else {
+                    bgPollTimer = null;
+                }
+            } );
+        }
+
+        // Poll on page load to restore state if sync was already running
+        bgPoll();
+
+        $('#s3-bg-start').on( 'click', function(e) {
+            e.preventDefault();
+            if ( ! window.confirm( 'Start background sync? All unsynced attachments will be uploaded to S3 on the server.' ) ) return;
+            $(this).prop( 'disabled', true ).text( 'Starting...' );
+            $.post( S3MediaSync.ajax_url, {
+                action: 's3_media_sync_bg_start',
+                nonce:  S3MediaSync.nonce_bg
+            }, function( resp ) {
+                if ( resp && resp.success ) {
+                    bgUpdateUI( resp.data );
+                    bgPollTimer = setTimeout( bgPoll, 4000 );
+                } else {
+                    $('#s3-bg-status').css( 'color', 'red' ).text( resp.data || 'Error starting background sync.' );
+                    $('#s3-bg-start').prop( 'disabled', false ).text( 'Start Background Sync' );
+                }
+            } ).fail( function() {
+                $('#s3-bg-status').css( 'color', 'red' ).text( 'AJAX error.' );
+                $('#s3-bg-start').prop( 'disabled', false ).text( 'Start Background Sync' );
+            } );
+        } );
+
+        $('#s3-bg-clear').on( 'click', function(e) {
+            e.preventDefault();
+            if ( ! window.confirm( 'Stop all running actions, clear sync status, and reset everything? This cannot be undone.' ) ) return;
+            var $btn = $(this).prop( 'disabled', true ).text( 'Clearing...' );
+            if ( bgPollTimer ) { clearTimeout( bgPollTimer ); bgPollTimer = null; }
+            $.post( S3MediaSync.ajax_url, {
+                action: 's3_media_sync_bg_clear_all',
+                nonce:  S3MediaSync.nonce_bg
+            }, function( resp ) {
+                $btn.prop( 'disabled', false ).text( 'Stop & Clear All (reset)' );
+                if ( resp && resp.success ) {
+                    bgUpdateUI( { status: 'stopped', processed: 0, succeeded: 0, skipped: 0, missing: 0, errors: 0, total: 0 } );
+                    $('#s3-bg-status').css( 'color', 'green' ).text( resp.data.message );
+                } else {
+                    $('#s3-bg-status').css( 'color', 'red' ).text( resp.data || 'Error.' );
+                }
+            } ).fail( function() {
+                $btn.prop( 'disabled', false ).text( 'Stop & Clear All (reset)' );
+                $('#s3-bg-status').css( 'color', 'red' ).text( 'AJAX error.' );
+            } );
+        } );
+
+        $('#s3-bg-stop').on( 'click', function(e) {
+            e.preventDefault();
+            if ( bgPollTimer ) { clearTimeout( bgPollTimer ); bgPollTimer = null; }
+            $.post( S3MediaSync.ajax_url, {
+                action: 's3_media_sync_bg_stop',
+                nonce:  S3MediaSync.nonce_bg
+            }, function( resp ) {
+                if ( resp && resp.success ) bgUpdateUI( resp.data );
+            } );
+        } );
 
         // ── Reset Sync Status ─────────────────────────────────────────────────
         $('#s3-media-sync-reset').on('click', function(e){

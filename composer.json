@@ -1,12 +1,12 @@
 {
-  "name": "codetot-huong/s3-media-sync",
+  "name": "codetot/s3-media-sync",
   "description": "WordPress plugin to sync media library to any S3-compatible storage",
   "type": "wordpress-plugin",
   "license": "GPL-2.0-or-later",
   "authors": [
     {
-      "name": "codetot-huong",
-      "homepage": "https://github.com/codetot-huong"
+      "name": "codetot",
+      "homepage": "https://github.com/codetot"
     }
   ],
   "require": {
