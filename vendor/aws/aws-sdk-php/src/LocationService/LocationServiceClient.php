@@ -61,8 +61,6 @@ use Aws\AwsClient;
  * @method \GuzzleHttp\Promise\Promise describeTrackerAsync(array $args = [])
  * @method \Aws\Result disassociateTrackerConsumer(array $args = [])
  * @method \GuzzleHttp\Promise\Promise disassociateTrackerConsumerAsync(array $args = [])
- * @method \Aws\Result forecastGeofenceEvents(array $args = [])
- * @method \GuzzleHttp\Promise\Promise forecastGeofenceEventsAsync(array $args = [])
  * @method \Aws\Result getDevicePosition(array $args = [])
  * @method \GuzzleHttp\Promise\Promise getDevicePositionAsync(array $args = [])
  * @method \Aws\Result getDevicePositionHistory(array $args = [])
@@ -123,7 +121,5 @@ use Aws\AwsClient;
  * @method \GuzzleHttp\Promise\Promise updateRouteCalculatorAsync(array $args = [])
  * @method \Aws\Result updateTracker(array $args = [])
  * @method \GuzzleHttp\Promise\Promise updateTrackerAsync(array $args = [])
- * @method \Aws\Result verifyDevicePosition(array $args = [])
- * @method \GuzzleHttp\Promise\Promise verifyDevicePositionAsync(array $args = [])
  */
 class LocationServiceClient extends AwsClient {}

@@ -160,8 +160,6 @@ use Aws\AwsClient;
  * @method \GuzzleHttp\Promise\Promise updatePullRequestTitleAsync(array $args = [])
  * @method \Aws\Result updateRepositoryDescription(array $args = [])
  * @method \GuzzleHttp\Promise\Promise updateRepositoryDescriptionAsync(array $args = [])
- * @method \Aws\Result updateRepositoryEncryptionKey(array $args = [])
- * @method \GuzzleHttp\Promise\Promise updateRepositoryEncryptionKeyAsync(array $args = [])
  * @method \Aws\Result updateRepositoryName(array $args = [])
  * @method \GuzzleHttp\Promise\Promise updateRepositoryNameAsync(array $args = [])
  */

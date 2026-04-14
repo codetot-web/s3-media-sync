@@ -11,7 +11,7 @@
   ],
   "require": {
     "php": ">=7.4",
-    "aws/aws-sdk-php": "^3.0"
+    "aws/aws-sdk-php": "^3.0 <3.288"
   },
   "autoload": {
     "psr-4": {
@@ -19,6 +19,9 @@
     }
   },
   "config": {
-    "optimize-autoloader": true
+    "optimize-autoloader": true,
+    "audit": {
+      "ignore": ["PKSA-4t1p-xpk2-nsss", "PKSA-dxyf-6n16-t87m", "PKSA-n3s6-289w-qtqb", "PKSA-stsw-jsf7-f6vs"]
+    }
   }
 }

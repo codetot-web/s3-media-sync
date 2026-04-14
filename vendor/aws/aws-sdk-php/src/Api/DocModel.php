@@ -90,8 +90,8 @@ class DocModel
 
         $result = '';
         $d = $this->docs['shapes'][$shapeName];
-        if (isset($d['refs']["{$parentName}\${$ref}"])) {
-            $result = $d['refs']["{$parentName}\${$ref}"];
+        if (isset($d['refs']["{$parentName}\$${ref}"])) {
+            $result = $d['refs']["{$parentName}\$${ref}"];
         } elseif (isset($d['base'])) {
             $result = $d['base'];
         }
@@ -113,7 +113,6 @@ class DocModel
         return $this->clean($result);
     }
 
-
     private function clean($content)
     {
         if (!$content) {
@@ -127,7 +126,7 @@ class DocModel
             'output-html' => true,
             'show-body-only' => true,
             'drop-empty-paras' => true,
-            'clean' => true,
+            'drop-font-tags' => true,
             'drop-proprietary-attributes' => true,
             'hide-comments' => true,
             'logical-emphasis' => true

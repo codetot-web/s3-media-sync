@@ -87,7 +87,7 @@ class RetryMiddleware
             $retries,
             CommandInterface $command,
             RequestInterface $request,
-            ?ResultInterface $result = null,
+            ResultInterface $result = null,
             $error = null
         ) use ($maxRetries, $retryCurlErrors, $extraConfig) {
             // Allow command-level options to override this value
@@ -163,13 +163,11 @@ class RetryMiddleware
             return true;
         }
 
-        $awsCode = $error->getAwsErrorCode();
-        if (!is_null($awsCode) && isset($errorCodes[$awsCode])) {
+        if (isset($errorCodes[$error->getAwsErrorCode()])) {
             return true;
         }
 
-        $status = $error->getStatusCode();
-        if (!is_null($status) && isset($statusCodes[$status])) {
+        if (isset($statusCodes[$error->getStatusCode()])) {
             return true;
         }
 
@@ -218,7 +216,7 @@ class RetryMiddleware
      */
     public function __invoke(
         CommandInterface $command,
-        ?RequestInterface $request = null
+        RequestInterface $request = null
     ) {
         $retries = 0;
         $requestStats = [];

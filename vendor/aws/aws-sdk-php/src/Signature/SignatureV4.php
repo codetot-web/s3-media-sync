@@ -4,7 +4,6 @@ namespace Aws\Signature;
 use Aws\Credentials\CredentialsInterface;
 use AWS\CRT\Auth\Signable;
 use AWS\CRT\Auth\SignatureType;
-use AWS\CRT\Auth\SignedBodyHeaderType;
 use AWS\CRT\Auth\Signing;
 use AWS\CRT\Auth\SigningAlgorithm;
 use AWS\CRT\Auth\SigningConfigAWS;
@@ -346,9 +345,7 @@ class SignatureV4 implements SignatureInterface
         }
 
         $qs = '';
-        uksort($query, static function (string $a, string $b): int {
-            return strcmp(rawurlencode($a), rawurlencode($b));
-        });
+        ksort($query);
         foreach ($query as $k => $v) {
             if (!is_array($v)) {
                 $qs .= rawurlencode($k) . '=' . rawurlencode($v !== null ? $v : '') . '&';
@@ -449,7 +446,7 @@ class SignatureV4 implements SignatureInterface
         );
     }
 
-    protected function verifyCRTLoaded()
+    private function verifyCRTLoaded()
     {
         if (!extension_loaded('awscrt')) {
             throw new CommonRuntimeException(
@@ -460,7 +457,7 @@ class SignatureV4 implements SignatureInterface
         }
     }
 
-    protected function createCRTStaticCredentialsProvider($credentials)
+    private function createCRTStaticCredentialsProvider($credentials)
     {
         return new StaticCredentialsProvider([
             'access_key_id' => $credentials->getAccessKeyId(),
@@ -471,17 +468,16 @@ class SignatureV4 implements SignatureInterface
 
     private function removeIllegalV4aHeaders(&$request)
     {
-        static $illegalV4aHeaders = [
+        $illegalV4aHeaders = [
             self::AMZ_CONTENT_SHA256_HEADER,
-            'aws-sdk-invocation-id',
-            'aws-sdk-retry',
-            'x-amz-region-set',
-            'transfer-encoding'
+            "aws-sdk-invocation-id",
+            "aws-sdk-retry",
+            'x-amz-region-set'
         ];
         $storedHeaders = [];
 
         foreach ($illegalV4aHeaders as $header) {
-            if ($request->hasHeader($header)) {
+            if ($request->hasHeader($header)){
                 $storedHeaders[$header] = $request->getHeader($header);
                 $request = $request->withoutHeader($header);
             }
@@ -504,24 +500,18 @@ class SignatureV4 implements SignatureInterface
      * @param CredentialsInterface $credentials
      * @param RequestInterface $request
      * @param $signingService
-     * @param SigningConfigAWS|null $signingConfig
      * @return RequestInterface
      */
-    protected function signWithV4a(
-        CredentialsInterface $credentials,
-        RequestInterface $request,
-        $signingService,
-        ?SigningConfigAWS $signingConfig = null
-    ){
+    protected function signWithV4a(CredentialsInterface $credentials, RequestInterface $request, $signingService)
+    {
         $this->verifyCRTLoaded();
-        $signingConfig = $signingConfig ?? new SigningConfigAWS([
+        $credentials_provider = $this->createCRTStaticCredentialsProvider($credentials);
+        $signingConfig = new SigningConfigAWS([
             'algorithm' => SigningAlgorithm::SIGv4_ASYMMETRIC,
             'signature_type' => SignatureType::HTTP_REQUEST_HEADERS,
-            'credentials_provider' => $this->createCRTStaticCredentialsProvider($credentials),
+            'credentials_provider' => $credentials_provider,
             'signed_body_value' => $this->getPayload($request),
-            'should_normalize_uri_path' => true,
-            'use_double_uri_encode' => true,
-            'region' => $this->region,
+            'region' => "*",
             'service' => $signingService,
             'date' => time(),
         ]);

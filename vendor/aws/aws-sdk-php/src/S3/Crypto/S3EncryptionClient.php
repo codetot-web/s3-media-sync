@@ -3,7 +3,6 @@ namespace Aws\S3\Crypto;
 
 use Aws\Crypto\DecryptionTrait;
 use Aws\HashingStream;
-use Aws\MetricsBuilder;
 use Aws\PhpHash;
 use Aws\Crypto\AbstractCryptoClient;
 use Aws\Crypto\EncryptionTrait;
@@ -54,20 +53,9 @@ class S3EncryptionClient extends AbstractCryptoClient
         S3Client $client,
         $instructionFileSuffix = null
     ) {
-        trigger_error(
-            'S3EncryptionClient is deprecated and will be removed in a future ' .
-            'release due to security vulnerabilities. Please migrate to ' .
-            'S3EncryptionClientV3 as soon as possible.' . "\n" .
-            'See https://docs.aws.amazon.com/sdk-for-php/v3/developer-guide/' .
-            'security.html for upgrade guidance.',
-            E_USER_DEPRECATED
-        );
+        $this->appendUserAgent($client, 'feat/s3-encrypt/' . self::CRYPTO_VERSION);
         $this->client = $client;
         $this->instructionFileSuffix = $instructionFileSuffix;
-        MetricsBuilder::appendMetricsCaptureMiddleware(
-            $this->client->getHandlerList(),
-            MetricsBuilder::S3_CRYPTO_V1N
-        );
     }
 
     private static function getDefaultStrategy()

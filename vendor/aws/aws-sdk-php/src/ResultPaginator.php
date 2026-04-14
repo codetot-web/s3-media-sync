@@ -45,10 +45,6 @@ class ResultPaginator implements \Iterator
         $this->operation = $operation;
         $this->args = $args;
         $this->config = $config;
-        MetricsBuilder::appendMetricsCaptureMiddleware(
-            $this->client->getHandlerList(),
-            MetricsBuilder::PAGINATOR
-        );
     }
 
     /**
@@ -111,27 +107,18 @@ class ResultPaginator implements \Iterator
         return $this->valid() ? $this->result : false;
     }
 
-    /**
-     * @return mixed
-     */
     #[\ReturnTypeWillChange]
     public function key()
     {
         return $this->valid() ? $this->requestCount - 1 : null;
     }
 
-    /**
-     * @return void
-     */
     #[\ReturnTypeWillChange]
     public function next()
     {
         $this->result = null;
     }
 
-    /**
-     * @return bool
-     */
     #[\ReturnTypeWillChange]
     public function valid()
     {
@@ -167,9 +154,6 @@ class ResultPaginator implements \Iterator
         return false;
     }
 
-    /**
-     * @return void
-     */
     #[\ReturnTypeWillChange]
     public function rewind()
     {
@@ -178,7 +162,7 @@ class ResultPaginator implements \Iterator
         $this->result = null;
     }
 
-    private function createNextCommand(array $args, ?array $nextToken = null)
+    private function createNextCommand(array $args, array $nextToken = null)
     {
         return $this->client->getCommand($this->operation, array_merge($args, ($nextToken ?: [])));
     }

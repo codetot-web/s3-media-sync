@@ -1,9 +1,12 @@
 <?php
 namespace Aws\Crypto;
 
+use Aws\Crypto\Polyfill\AesGcm;
+use Aws\Crypto\Polyfill\Key;
 use GuzzleHttp\Psr7;
 use GuzzleHttp\Psr7\StreamDecoratorTrait;
 use Psr\Http\Message\StreamInterface;
+use \RuntimeException;
 
 /**
  * @internal Represents a stream of data to be gcm encrypted.
@@ -25,11 +28,6 @@ class AesGcmEncryptingStream implements AesStreamInterface, AesStreamInterfaceV2
     private $tag = '';
 
     private $tagLength;
-
-    /**
-     * @var StreamInterface
-     */
-    private $stream;
 
     /**
      * Same as non-static 'getAesName' method, allowing calls in a static
@@ -65,9 +63,6 @@ class AesGcmEncryptingStream implements AesStreamInterface, AesStreamInterfaceV2
         $this->aad = $aad;
         $this->tagLength = $tagLength;
         $this->keySize = $keySize;
-        // unsetting the property forces the first access to go through
-        // __get().
-        unset($this->stream);
     }
 
     public function getOpenSslName()
@@ -92,16 +87,27 @@ class AesGcmEncryptingStream implements AesStreamInterface, AesStreamInterfaceV2
 
     public function createStream()
     {
-        return Psr7\Utils::streamFor(\openssl_encrypt(
-            (string)$this->plaintext,
-            $this->getOpenSslName(),
-            $this->key,
-            OPENSSL_RAW_DATA,
-            $this->initializationVector,
-            $this->tag,
-            $this->aad,
-            $this->tagLength
-        ));
+        if (version_compare(PHP_VERSION, '7.1', '<')) {
+            return Psr7\Utils::streamFor(AesGcm::encrypt(
+                (string) $this->plaintext,
+                $this->initializationVector,
+                new Key($this->key),
+                $this->aad,
+                $this->tag,
+                $this->keySize
+            ));
+        } else {
+            return Psr7\Utils::streamFor(\openssl_encrypt(
+                (string)$this->plaintext,
+                $this->getOpenSslName(),
+                $this->key,
+                OPENSSL_RAW_DATA,
+                $this->initializationVector,
+                $this->tag,
+                $this->aad,
+                $this->tagLength
+            ));
+        }
     }
 
     /**
