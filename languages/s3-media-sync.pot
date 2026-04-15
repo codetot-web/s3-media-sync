@@ -1,0 +1,445 @@
+# Copyright (C) 2024 S3 Media Sync
+# This file is distributed under the same license as the S3 Media Sync plugin.
+msgid ""
+msgstr ""
+"Project-Id-Version: S3 Media Sync 1.0\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-04-16 00:00+0000\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=INTEGER; plural=EXPRESSION;\n"
+"X-Generator: Manual\n"
+"X-Domain: s3-media-sync\n"
+
+#. Settings page — table headers / field labels
+#: includes/admin/class-s3-media-sync-admin.php
+msgid "Enable sync"
+msgstr ""
+
+#: includes/admin/class-s3-media-sync-admin.php
+msgid "Access Key"
+msgstr ""
+
+#: includes/admin/class-s3-media-sync-admin.php
+msgid "Secret Key"
+msgstr ""
+
+#: includes/admin/class-s3-media-sync-admin.php
+msgid "Bucket"
+msgstr ""
+
+#: includes/admin/class-s3-media-sync-admin.php
+msgid "Region"
+msgstr ""
+
+#: includes/admin/class-s3-media-sync-admin.php
+msgid "AWS region (e.g. us-east-1, ap-southeast-1). For S3-compatible providers, try us-east-1 if unsure."
+msgstr ""
+
+#: includes/admin/class-s3-media-sync-admin.php
+msgid "Endpoint"
+msgstr ""
+
+#: includes/admin/class-s3-media-sync-admin.php
+msgid "Optional — enter hostname or full URL (https://...)."
+msgstr ""
+
+#: includes/admin/class-s3-media-sync-admin.php
+msgid "Public Bucket URL"
+msgstr ""
+
+#: includes/admin/class-s3-media-sync-admin.php
+msgid "Optional — public base URL for your bucket. Do not include the bucket name; the plugin will append the file path automatically. If you include the bucket, it will be detected and removed."
+msgstr ""
+
+#: includes/admin/class-s3-media-sync-admin.php
+msgid "Delete local after upload"
+msgstr ""
+
+#: includes/admin/class-s3-media-sync-admin.php
+msgid "Automatically delete local files after a successful upload to S3. Only enable when S3 is working reliably."
+msgstr ""
+
+#: includes/admin/class-s3-media-sync-admin.php
+msgid "Disable SSL Verify"
+msgstr ""
+
+#: includes/admin/class-s3-media-sync-admin.php
+msgid "Disable SSL certificate verification. Use when the endpoint uses a self-signed or expired certificate."
+msgstr ""
+
+#: includes/admin/class-s3-media-sync-admin.php
+msgid "Test"
+msgstr ""
+
+#: includes/admin/class-s3-media-sync-admin.php
+msgid "Test Connection"
+msgstr ""
+
+#. Synced media list page
+#: includes/admin/class-s3-media-sync-admin.php
+msgid "S3 Synced Media"
+msgstr ""
+
+#: includes/admin/class-s3-media-sync-admin.php
+msgid "Search files"
+msgstr ""
+
+#. Tools page — section headings and descriptions
+#: includes/admin/class-s3-media-sync-admin.php
+msgid "S3 Media Sync Tools"
+msgstr ""
+
+#: includes/admin/class-s3-media-sync-admin.php
+msgid "BG Sync State:"
+msgstr ""
+
+#: includes/admin/class-s3-media-sync-admin.php
+msgid "Total:"
+msgstr ""
+
+#: includes/admin/class-s3-media-sync-admin.php
+msgid "Processed:"
+msgstr ""
+
+#: includes/admin/class-s3-media-sync-admin.php
+msgid "Uploaded:"
+msgstr ""
+
+#: includes/admin/class-s3-media-sync-admin.php
+msgid "Skipped:"
+msgstr ""
+
+#: includes/admin/class-s3-media-sync-admin.php
+msgid "Missing:"
+msgstr ""
+
+#: includes/admin/class-s3-media-sync-admin.php
+msgid "Errors:"
+msgstr ""
+
+#: includes/admin/class-s3-media-sync-admin.php
+msgid "Last error:"
+msgstr ""
+
+#: includes/admin/class-s3-media-sync-admin.php
+msgid "Background Sync (Server-side)"
+msgstr ""
+
+#: includes/admin/class-s3-media-sync-admin.php
+msgid "Sync runs entirely on the server via WP-Cron — you can close this tab and it will continue."
+msgstr ""
+
+#: includes/admin/class-s3-media-sync-admin.php
+msgid "Start Background Sync"
+msgstr ""
+
+#: includes/admin/class-s3-media-sync-admin.php
+msgid "Stop"
+msgstr ""
+
+#: includes/admin/class-s3-media-sync-admin.php
+msgid "Stop & Clear All (reset)"
+msgstr ""
+
+#: includes/admin/class-s3-media-sync-admin.php
+msgid "Manual Sync"
+msgstr ""
+
+#: includes/admin/class-s3-media-sync-admin.php
+msgid "Run a manual sync of attachments to your configured S3 bucket. This processes in batches to avoid timeouts."
+msgstr ""
+
+#: includes/admin/class-s3-media-sync-admin.php
+msgid "Start Manual Sync to S3"
+msgstr ""
+
+#: includes/admin/class-s3-media-sync-admin.php
+msgid "Reset offset (sync from beginning)"
+msgstr ""
+
+#: includes/admin/class-s3-media-sync-admin.php
+msgid "Delete Local Media"
+msgstr ""
+
+#: includes/admin/class-s3-media-sync-admin.php
+msgid "Remove local copies of media that have already been synced to S3. This will delete original files and resized variants."
+msgstr ""
+
+#: includes/admin/class-s3-media-sync-admin.php
+msgid "Delete Local Media (synced only)"
+msgstr ""
+
+#: includes/admin/class-s3-media-sync-admin.php
+msgid "Stop Delete"
+msgstr ""
+
+#: includes/admin/class-s3-media-sync-admin.php
+msgid "Mark All as Synced"
+msgstr ""
+
+#: includes/admin/class-s3-media-sync-admin.php
+msgid "Mark all media as synced without uploading to S3. Use this when images were already imported to S3 via another tool (rclone, aws cli, etc.) before activating the plugin."
+msgstr ""
+
+#: includes/admin/class-s3-media-sync-admin.php
+msgid "Reset Sync Status"
+msgstr ""
+
+#: includes/admin/class-s3-media-sync-admin.php
+msgid "Delete all s3_media_sync_synced meta — all files will be treated as not yet synced and Manual Sync can be run from the beginning."
+msgstr ""
+
+#. AJAX response messages
+#: includes/admin/class-s3-media-sync-admin.php
+msgid "Insufficient permissions"
+msgstr ""
+
+#: includes/admin/class-s3-media-sync-admin.php
+msgid "Please provide Access Key, Secret Key, and Bucket."
+msgstr ""
+
+#: includes/admin/class-s3-media-sync-admin.php
+msgid "AWS SDK for PHP not found. Please install aws/aws-sdk-php via Composer."
+msgstr ""
+
+#: includes/admin/class-s3-media-sync-admin.php
+msgid "Could not create S3 client. Check your credentials."
+msgstr ""
+
+#: includes/admin/class-s3-media-sync-admin.php
+msgid "Connection successful (bucket exists / accessible)."
+msgstr ""
+
+#. translators: %s: error message from the S3 SDK
+#: includes/admin/class-s3-media-sync-admin.php
+msgid "Connection failed: %s"
+msgstr ""
+
+#: includes/admin/class-s3-media-sync-admin.php
+msgid "Please configure Access Key, Secret Key, and Bucket in settings."
+msgstr ""
+
+#: includes/admin/class-s3-media-sync-admin.php
+msgid "No synced attachments found to delete locally."
+msgstr ""
+
+#. translators: %d: number of synced files that were reset
+#: includes/admin/class-s3-media-sync-admin.php
+msgid "Stopped & cleared. Reset %d synced files. Ready to start fresh."
+msgstr ""
+
+#: includes/admin/class-s3-media-sync-admin.php
+msgid "Background sync offset reset. Click Start to sync from the beginning."
+msgstr ""
+
+#. translators: %d: number of files whose sync status was deleted
+#: includes/admin/class-s3-media-sync-admin.php
+msgid "Reset complete. Deleted sync status for %d files. Background sync has also been reset."
+msgstr ""
+
+#. translators: %d: number of files marked as synced
+#: includes/admin/class-s3-media-sync-admin.php
+msgid "Marked %d files as synced."
+msgstr ""
+
+#: includes/admin/class-s3-media-sync-admin.php
+msgid "Invalid attachment ID"
+msgstr ""
+
+#: includes/admin/class-s3-media-sync-admin.php
+msgid "S3 is not configured. Check Settings > S3 Media Sync."
+msgstr ""
+
+#: includes/admin/class-s3-media-sync-admin.php
+msgid "File does not exist on the server."
+msgstr ""
+
+#. translators: %s: date and time of successful sync
+#: includes/admin/class-s3-media-sync-admin.php
+msgid "Synced successfully at %s"
+msgstr ""
+
+#. Attachment field / meta box
+#. translators: %s: date and time the file was synced
+#: includes/admin/class-s3-media-sync-admin.php
+msgid "Synced at %s"
+msgstr ""
+
+#: includes/admin/class-s3-media-sync-admin.php
+msgid "Not yet synced to S3"
+msgstr ""
+
+#: includes/admin/class-s3-media-sync-admin.php
+msgid "Re-sync"
+msgstr ""
+
+#: includes/admin/class-s3-media-sync-admin.php
+msgid "Sync to S3"
+msgstr ""
+
+#: includes/admin/class-s3-media-sync-admin.php
+msgid "Syncing..."
+msgstr ""
+
+#: includes/admin/class-s3-media-sync-admin.php
+msgid "Re-sync to S3"
+msgstr ""
+
+#: includes/admin/class-s3-media-sync-admin.php
+msgid "Plugin is not enabled. Go to Settings > S3 Media Sync to configure."
+msgstr ""
+
+#. JS i18n strings (passed via wp_localize_script)
+#: includes/admin/class-s3-media-sync-admin.php
+msgid "Testing..."
+msgstr ""
+
+#: includes/admin/class-s3-media-sync-admin.php
+msgid "AJAX error"
+msgstr ""
+
+#: includes/admin/class-s3-media-sync-admin.php
+msgid "Starting..."
+msgstr ""
+
+#: includes/admin/class-s3-media-sync-admin.php
+msgid "Stopped. Click Start to continue."
+msgstr ""
+
+#: includes/admin/class-s3-media-sync-admin.php
+msgid "Sync complete!"
+msgstr ""
+
+#: includes/admin/class-s3-media-sync-admin.php
+msgid "Server error — Auto-retry"
+msgstr ""
+
+#: includes/admin/class-s3-media-sync-admin.php
+msgid "Batch error — skipped, continuing..."
+msgstr ""
+
+#: includes/admin/class-s3-media-sync-admin.php
+msgid "Syncing —"
+msgstr ""
+
+#: includes/admin/class-s3-media-sync-admin.php
+msgid "Deleting —"
+msgstr ""
+
+#: includes/admin/class-s3-media-sync-admin.php
+msgid "Starting deletion..."
+msgstr ""
+
+#: includes/admin/class-s3-media-sync-admin.php
+msgid "Deletion stopped. Removed:"
+msgstr ""
+
+#: includes/admin/class-s3-media-sync-admin.php
+msgid "Done! Deleted local files:"
+msgstr ""
+
+#: includes/admin/class-s3-media-sync-admin.php
+msgid "Error — Auto-retry"
+msgstr ""
+
+#: includes/admin/class-s3-media-sync-admin.php
+msgid "Failed. Deleted so far:"
+msgstr ""
+
+#: includes/admin/class-s3-media-sync-admin.php
+msgid "Refresh and click again to continue."
+msgstr ""
+
+#: includes/admin/class-s3-media-sync-admin.php
+msgid "No background sync running."
+msgstr ""
+
+#: includes/admin/class-s3-media-sync-admin.php
+msgid "Done!"
+msgstr ""
+
+#: includes/admin/class-s3-media-sync-admin.php
+msgid "Stopped."
+msgstr ""
+
+#: includes/admin/class-s3-media-sync-admin.php
+msgid "Error:"
+msgstr ""
+
+#: includes/admin/class-s3-media-sync-admin.php
+msgid "Running..."
+msgstr ""
+
+#: includes/admin/class-s3-media-sync-admin.php
+msgid "Error starting background sync."
+msgstr ""
+
+#: includes/admin/class-s3-media-sync-admin.php
+msgid "Clearing..."
+msgstr ""
+
+#: includes/admin/class-s3-media-sync-admin.php
+msgid "Processing..."
+msgstr ""
+
+#: includes/admin/class-s3-media-sync-admin.php
+msgid "Deleting..."
+msgstr ""
+
+#: includes/admin/class-s3-media-sync-admin.php
+msgid "Manual sync offset reset."
+msgstr ""
+
+#: includes/admin/class-s3-media-sync-admin.php
+msgid "resume from ID"
+msgstr ""
+
+#: includes/admin/class-s3-media-sync-admin.php
+msgid "There is unfinished progress (last ID:"
+msgstr ""
+
+#: includes/admin/class-s3-media-sync-admin.php
+msgid "Click Start to continue."
+msgstr ""
+
+#: includes/admin/class-s3-media-sync-admin.php
+msgid "Unknown"
+msgstr ""
+
+#: includes/admin/class-s3-media-sync-admin.php
+msgid "Deleted:"
+msgstr ""
+
+#: includes/admin/class-s3-media-sync-admin.php
+msgid "last update:"
+msgstr ""
+
+#: includes/admin/class-s3-media-sync-admin.php
+msgid "in"
+msgstr ""
+
+#: includes/admin/class-s3-media-sync-admin.php
+msgid "Delete local files of media already synced to S3? This action cannot be undone."
+msgstr ""
+
+#: includes/admin/class-s3-media-sync-admin.php
+msgid "Start background sync? All unsynced attachments will be uploaded to S3 on the server."
+msgstr ""
+
+#: includes/admin/class-s3-media-sync-admin.php
+msgid "Stop all running actions, clear sync status, and reset everything? This cannot be undone."
+msgstr ""
+
+#: includes/admin/class-s3-media-sync-admin.php
+msgid "Mark all media as synced without uploading to S3? Use this when images were already imported to S3 via another tool."
+msgstr ""
+
+#: includes/admin/class-s3-media-sync-admin.php
+msgid "Delete all sync status? All files will be treated as not yet synced."
+msgstr ""
