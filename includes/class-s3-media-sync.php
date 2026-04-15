@@ -82,8 +82,13 @@ class S3_Media_Sync {
             'use_path_style_endpoint' => true,
         ) );
 
+        $args['http'] = array(
+            'timeout'         => 60,
+            'connect_timeout' => 10,
+        );
+
         if ( $disable_ssl ) {
-            $args['http'] = array( 'verify' => false );
+            $args['http']['verify'] = false;
         }
 
         return new \Aws\S3\S3Client( $args );
@@ -422,6 +427,28 @@ class S3_Media_Sync {
             return;
         }
 
+        @ini_set( 'memory_limit', '512M' );
+        @set_time_limit( 300 );
+
+        // Schedule batch tiếp theo NGAY BÂY GIỜ trước khi làm bất cứ điều gì.
+        // Đảm bảo chuỗi batch không bao giờ bị đứt dù PHP fatal/timeout.
+        $this->schedule_next_bg_batch();
+
+        try {
+            $this->process_bg_batch( $state );
+        } catch ( Exception $e ) {
+            error_log( '[s3-media-sync bg] Unexpected error in batch: ' . $e->getMessage() );
+            $state = get_option( 's3_bg_sync_state', $state );
+            if ( ! empty( $state ) && $state['status'] === 'running' ) {
+                $state['errors']++;
+                $state['last_error'] = $e->getMessage();
+                $state['updated_at'] = time();
+                update_option( 's3_bg_sync_state', $state );
+            }
+        }
+    }
+
+    private function process_bg_batch( $state ) {
         $opts   = get_option( 's3_media_sync_options', array() );
         $bucket = isset( $opts['bucket'] ) ? $opts['bucket'] : '';
         $client = self::get_s3_client( $opts );
@@ -431,13 +458,14 @@ class S3_Media_Sync {
             $state['last_error'] = 'S3 client not configured — check credentials and bucket.';
             $state['updated_at'] = time();
             update_option( 's3_bg_sync_state', $state );
+            $this->cancel_pending_bg_batches();
             return;
         }
 
         global $wpdb;
 
         $last_id    = isset( $state['last_id'] ) ? (int) $state['last_id'] : 0;
-        $batch_size = 10;
+        $batch_size = 3;
 
         $ids = $wpdb->get_col( $wpdb->prepare(
             "SELECT p.ID FROM {$wpdb->posts} p
@@ -453,8 +481,14 @@ class S3_Media_Sync {
             $state['status']      = 'done';
             $state['updated_at']  = time();
             update_option( 's3_bg_sync_state', $state );
+            $this->cancel_pending_bg_batches();
             return;
         }
+
+        // Lưu last_id trước khi xử lý — nếu PHP timeout, lần sau bỏ qua batch này.
+        $state['last_id']    = (int) max( $ids );
+        $state['updated_at'] = time();
+        update_option( 's3_bg_sync_state', $state );
 
         $uploads = wp_get_upload_dir();
         $base    = untrailingslashit( $uploads['basedir'] );
@@ -486,6 +520,7 @@ class S3_Media_Sync {
                 $state['succeeded']++;
             } catch ( Exception $e ) {
                 $state['errors']++;
+                $state['last_error'] = sprintf( 'ID %d: %s', $id, $e->getMessage() );
                 error_log( '[s3-media-sync bg] ' . $e->getMessage() );
             }
 
@@ -521,16 +556,23 @@ class S3_Media_Sync {
             $state['processed']++;
         }
 
-        $state['last_id']    = (int) max( $ids );
         $state['updated_at'] = time();
         update_option( 's3_bg_sync_state', $state );
+    }
 
-        // Schedule next batch — use Action Scheduler if available, else WP-Cron
+    private function schedule_next_bg_batch() {
         if ( function_exists( 'as_schedule_single_action' ) ) {
             as_schedule_single_action( time() + 5, 's3_media_sync_bg_batch', array(), 's3-media-sync' );
         } else {
             wp_schedule_single_event( time() + 5, 's3_media_sync_bg_batch' );
         }
+    }
+
+    private function cancel_pending_bg_batches() {
+        if ( function_exists( 'as_unschedule_all_actions' ) ) {
+            as_unschedule_all_actions( 's3_media_sync_bg_batch', array(), 's3-media-sync' );
+        }
+        wp_clear_scheduled_hook( 's3_media_sync_bg_batch' );
     }
 
     private function get_s3_url_from_file( $file ) {

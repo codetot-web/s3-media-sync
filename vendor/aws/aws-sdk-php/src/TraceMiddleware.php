@@ -18,6 +18,7 @@ class TraceMiddleware
     private $prevOutput;
     private $prevInput;
     private $config;
+
     /** @var Service */
     private $service;
 
@@ -61,7 +62,7 @@ class TraceMiddleware
      *   headers contained in this array will be replaced with the if
      *   "scrub_auth" is set to true.
      */
-    public function __construct(array $config = [], ?Service $service = null)
+    public function __construct(array $config = [], Service $service = null)
     {
         $this->config = $config + [
             'logfn'        => function ($value) { echo $value; },
@@ -84,7 +85,7 @@ class TraceMiddleware
         return function (callable $next) use ($step, $name) {
             return function (
                 CommandInterface $command,
-                $request = null
+                RequestInterface $request = null
             ) use ($next, $step, $name) {
                 $this->createHttpDebug($command);
                 $start = microtime(true);
@@ -163,23 +164,21 @@ class TraceMiddleware
         ];
     }
 
-    private function requestArray($request = null)
+    private function requestArray(RequestInterface $request = null)
     {
-        return !$request instanceof RequestInterface
-            ? []
-            : array_filter([
-                'instance' => spl_object_hash($request),
-                'method'   => $request->getMethod(),
-                'headers'  => $this->redactHeaders($request->getHeaders()),
-                'body'     => $this->streamStr($request->getBody()),
-                'scheme'   => $request->getUri()->getScheme(),
-                'port'     => $request->getUri()->getPort(),
-                'path'     => $request->getUri()->getPath(),
-                'query'    => $request->getUri()->getQuery(),
+        return !$request ? [] : array_filter([
+            'instance' => spl_object_hash($request),
+            'method'   => $request->getMethod(),
+            'headers'  => $this->redactHeaders($request->getHeaders()),
+            'body'     => $this->streamStr($request->getBody()),
+            'scheme'   => $request->getUri()->getScheme(),
+            'port'     => $request->getUri()->getPort(),
+            'path'     => $request->getUri()->getPath(),
+            'query'    => $request->getUri()->getQuery(),
         ]);
     }
 
-    private function responseArray(?ResponseInterface $response = null)
+    private function responseArray(ResponseInterface $response = null)
     {
         return !$response ? [] : [
             'instance'   => spl_object_hash($response),

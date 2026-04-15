@@ -11,8 +11,6 @@ use Aws\AwsClient;
  * @method \GuzzleHttp\Promise\Promise createScheduledQueryAsync(array $args = [])
  * @method \Aws\Result deleteScheduledQuery(array $args = [])
  * @method \GuzzleHttp\Promise\Promise deleteScheduledQueryAsync(array $args = [])
- * @method \Aws\Result describeAccountSettings(array $args = [])
- * @method \GuzzleHttp\Promise\Promise describeAccountSettingsAsync(array $args = [])
  * @method \Aws\Result describeEndpoints(array $args = [])
  * @method \GuzzleHttp\Promise\Promise describeEndpointsAsync(array $args = [])
  * @method \Aws\Result describeScheduledQuery(array $args = [])
@@ -31,8 +29,6 @@ use Aws\AwsClient;
  * @method \GuzzleHttp\Promise\Promise tagResourceAsync(array $args = [])
  * @method \Aws\Result untagResource(array $args = [])
  * @method \GuzzleHttp\Promise\Promise untagResourceAsync(array $args = [])
- * @method \Aws\Result updateAccountSettings(array $args = [])
- * @method \GuzzleHttp\Promise\Promise updateAccountSettingsAsync(array $args = [])
  * @method \Aws\Result updateScheduledQuery(array $args = [])
  * @method \GuzzleHttp\Promise\Promise updateScheduledQueryAsync(array $args = [])
  */

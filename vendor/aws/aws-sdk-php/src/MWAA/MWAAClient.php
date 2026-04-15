@@ -15,8 +15,6 @@ use Aws\AwsClient;
  * @method \GuzzleHttp\Promise\Promise deleteEnvironmentAsync(array $args = [])
  * @method \Aws\Result getEnvironment(array $args = [])
  * @method \GuzzleHttp\Promise\Promise getEnvironmentAsync(array $args = [])
- * @method \Aws\Result invokeRestApi(array $args = [])
- * @method \GuzzleHttp\Promise\Promise invokeRestApiAsync(array $args = [])
  * @method \Aws\Result listEnvironments(array $args = [])
  * @method \GuzzleHttp\Promise\Promise listEnvironmentsAsync(array $args = [])
  * @method \Aws\Result listTagsForResource(array $args = [])

@@ -553,27 +553,39 @@ class S3_Media_Sync_Admin {
         }
         check_ajax_referer( 's3_media_sync_bg', 'nonce' );
 
-        // Count total attachments once
         global $wpdb;
-        $total = (int) $wpdb->get_var(
-            "SELECT COUNT(*) FROM {$wpdb->posts} p
-             INNER JOIN {$wpdb->postmeta} pm ON pm.post_id = p.ID AND pm.meta_key = '_wp_attached_file'
-             WHERE p.post_type = 'attachment' AND p.post_status = 'inherit'"
-        );
 
-        $state = array(
-            'status'     => 'running',
-            'last_id'    => 0,
-            'total'      => $total,
-            'processed'  => 0,
-            'succeeded'  => 0,
-            'skipped'    => 0,
-            'missing'    => 0,
-            'errors'     => 0,
-            'last_error' => '',
-            'started_at' => time(),
-            'updated_at' => time(),
-        );
+        $existing = get_option( 's3_bg_sync_state', array() );
+        $resume   = ! empty( $existing ) && isset( $existing['last_id'] ) && (int) $existing['last_id'] > 0;
+
+        if ( $resume ) {
+            // Tiếp tục từ vị trí đã dừng
+            $state               = $existing;
+            $state['status']     = 'running';
+            $state['updated_at'] = time();
+        } else {
+            // Bắt đầu mới hoàn toàn
+            $total = (int) $wpdb->get_var(
+                "SELECT COUNT(*) FROM {$wpdb->posts} p
+                 INNER JOIN {$wpdb->postmeta} pm ON pm.post_id = p.ID AND pm.meta_key = '_wp_attached_file'
+                 WHERE p.post_type = 'attachment' AND p.post_status = 'inherit'"
+            );
+
+            $state = array(
+                'status'     => 'running',
+                'last_id'    => 0,
+                'total'      => $total,
+                'processed'  => 0,
+                'succeeded'  => 0,
+                'skipped'    => 0,
+                'missing'    => 0,
+                'errors'     => 0,
+                'last_error' => '',
+                'started_at' => time(),
+                'updated_at' => time(),
+            );
+        }
+
         update_option( 's3_bg_sync_state', $state );
 
         // Clear any previously scheduled event and schedule the first batch
