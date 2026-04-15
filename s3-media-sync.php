@@ -17,7 +17,7 @@ if ( ! defined( 'ABSPATH' ) ) {
     exit;
 }
 
-define( 'S3_MEDIA_SYNC_VERSION', '0.1.0' );
+define( 'S3_MEDIA_SYNC_VERSION', '1.0.0' );
 define( 'S3_MEDIA_SYNC_FILE', __FILE__ );
 define( 'S3_MEDIA_SYNC_PATH', plugin_dir_path( __FILE__ ) );
 define( 'S3_MEDIA_SYNC_URL', plugin_dir_url( __FILE__ ) );
@@ -34,7 +34,8 @@ if ( is_admin() ) {
 }
 
 function s3_media_sync_init_plugin() {
-    $instance = S3_Media_Sync::instance();
+    load_plugin_textdomain( 's3-media-sync', false, dirname( plugin_basename( S3_MEDIA_SYNC_FILE ) ) . '/languages' );
+    S3_Media_Sync::instance();
     if ( is_admin() ) {
         S3_Media_Sync_Admin::instance();
     }

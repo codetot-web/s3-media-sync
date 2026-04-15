@@ -1,0 +1,446 @@
+# Vietnamese translation for S3 Media Sync
+# Copyright (C) 2024 S3 Media Sync
+# This file is distributed under the same license as the S3 Media Sync plugin.
+msgid ""
+msgstr ""
+"Project-Id-Version: S3 Media Sync 1.0\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-04-16 00:00+0000\n"
+"PO-Revision-Date: 2026-04-16 00:00+0000\n"
+"Last-Translator: \n"
+"Language-Team: Vietnamese\n"
+"Language: vi\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+"X-Generator: Manual\n"
+"X-Domain: s3-media-sync\n"
+
+#. Settings page — table headers / field labels
+#: includes/admin/class-s3-media-sync-admin.php
+msgid "Enable sync"
+msgstr "Bật đồng bộ"
+
+#: includes/admin/class-s3-media-sync-admin.php
+msgid "Access Key"
+msgstr "Access Key"
+
+#: includes/admin/class-s3-media-sync-admin.php
+msgid "Secret Key"
+msgstr "Secret Key"
+
+#: includes/admin/class-s3-media-sync-admin.php
+msgid "Bucket"
+msgstr "Bucket"
+
+#: includes/admin/class-s3-media-sync-admin.php
+msgid "Region"
+msgstr "Region"
+
+#: includes/admin/class-s3-media-sync-admin.php
+msgid "AWS region (e.g. us-east-1, ap-southeast-1). For S3-compatible providers, try us-east-1 if unsure."
+msgstr "Vùng AWS (ví dụ: us-east-1, ap-southeast-1). Với các nhà cung cấp tương thích S3, hãy thử us-east-1 nếu không chắc."
+
+#: includes/admin/class-s3-media-sync-admin.php
+msgid "Endpoint"
+msgstr "Endpoint"
+
+#: includes/admin/class-s3-media-sync-admin.php
+msgid "Optional — enter hostname or full URL (https://...)."
+msgstr "Tuỳ chọn — nhập hostname hoặc URL đầy đủ (https://...)."
+
+#: includes/admin/class-s3-media-sync-admin.php
+msgid "Public Bucket URL"
+msgstr "URL công khai của Bucket"
+
+#: includes/admin/class-s3-media-sync-admin.php
+msgid "Optional — public base URL for your bucket. Do not include the bucket name; the plugin will append the file path automatically. If you include the bucket, it will be detected and removed."
+msgstr "Tuỳ chọn — URL gốc công khai cho bucket của bạn. Không cần bao gồm tên bucket; plugin sẽ tự động thêm đường dẫn file. Nếu bạn thêm bucket vào, nó sẽ được phát hiện và loại bỏ."
+
+#: includes/admin/class-s3-media-sync-admin.php
+msgid "Delete local after upload"
+msgstr "Xoá local sau khi upload"
+
+#: includes/admin/class-s3-media-sync-admin.php
+msgid "Automatically delete local files after a successful upload to S3. Only enable when S3 is working reliably."
+msgstr "Tự động xoá file local sau khi upload lên S3 thành công. Chỉ bật khi S3 đã hoạt động ổn định."
+
+#: includes/admin/class-s3-media-sync-admin.php
+msgid "Disable SSL Verify"
+msgstr "Tắt kiểm tra SSL"
+
+#: includes/admin/class-s3-media-sync-admin.php
+msgid "Disable SSL certificate verification. Use when the endpoint uses a self-signed or expired certificate."
+msgstr "Tắt kiểm tra SSL certificate. Dùng khi endpoint dùng cert tự ký hoặc cert hết hạn."
+
+#: includes/admin/class-s3-media-sync-admin.php
+msgid "Test"
+msgstr "Kiểm tra"
+
+#: includes/admin/class-s3-media-sync-admin.php
+msgid "Test Connection"
+msgstr "Kiểm tra kết nối"
+
+#. Synced media list page
+#: includes/admin/class-s3-media-sync-admin.php
+msgid "S3 Synced Media"
+msgstr "Media đã đồng bộ S3"
+
+#: includes/admin/class-s3-media-sync-admin.php
+msgid "Search files"
+msgstr "Tìm kiếm file"
+
+#. Tools page — section headings and descriptions
+#: includes/admin/class-s3-media-sync-admin.php
+msgid "S3 Media Sync Tools"
+msgstr "Công cụ S3 Media Sync"
+
+#: includes/admin/class-s3-media-sync-admin.php
+msgid "BG Sync State:"
+msgstr "Trạng thái đồng bộ nền:"
+
+#: includes/admin/class-s3-media-sync-admin.php
+msgid "Total:"
+msgstr "Tổng cộng:"
+
+#: includes/admin/class-s3-media-sync-admin.php
+msgid "Processed:"
+msgstr "Đã xử lý:"
+
+#: includes/admin/class-s3-media-sync-admin.php
+msgid "Uploaded:"
+msgstr "Đã upload:"
+
+#: includes/admin/class-s3-media-sync-admin.php
+msgid "Skipped:"
+msgstr "Đã bỏ qua:"
+
+#: includes/admin/class-s3-media-sync-admin.php
+msgid "Missing:"
+msgstr "Thiếu file:"
+
+#: includes/admin/class-s3-media-sync-admin.php
+msgid "Errors:"
+msgstr "Lỗi:"
+
+#: includes/admin/class-s3-media-sync-admin.php
+msgid "Last error:"
+msgstr "Lỗi cuối:"
+
+#: includes/admin/class-s3-media-sync-admin.php
+msgid "Background Sync (Server-side)"
+msgstr "Đồng bộ nền (phía Server)"
+
+#: includes/admin/class-s3-media-sync-admin.php
+msgid "Sync runs entirely on the server via WP-Cron — you can close this tab and it will continue."
+msgstr "Quá trình đồng bộ chạy hoàn toàn trên server qua WP-Cron — bạn có thể đóng tab này và nó vẫn tiếp tục."
+
+#: includes/admin/class-s3-media-sync-admin.php
+msgid "Start Background Sync"
+msgstr "Bắt đầu đồng bộ nền"
+
+#: includes/admin/class-s3-media-sync-admin.php
+msgid "Stop"
+msgstr "Dừng"
+
+#: includes/admin/class-s3-media-sync-admin.php
+msgid "Stop & Clear All (reset)"
+msgstr "Dừng & Xoá tất cả (reset)"
+
+#: includes/admin/class-s3-media-sync-admin.php
+msgid "Manual Sync"
+msgstr "Đồng bộ thủ công"
+
+#: includes/admin/class-s3-media-sync-admin.php
+msgid "Run a manual sync of attachments to your configured S3 bucket. This processes in batches to avoid timeouts."
+msgstr "Chạy đồng bộ thủ công các tệp đính kèm lên S3 bucket đã cấu hình. Quá trình xử lý theo lô để tránh timeout."
+
+#: includes/admin/class-s3-media-sync-admin.php
+msgid "Start Manual Sync to S3"
+msgstr "Bắt đầu đồng bộ thủ công lên S3"
+
+#: includes/admin/class-s3-media-sync-admin.php
+msgid "Reset offset (sync from beginning)"
+msgstr "Đặt lại offset (đồng bộ từ đầu)"
+
+#: includes/admin/class-s3-media-sync-admin.php
+msgid "Delete Local Media"
+msgstr "Xoá Media local"
+
+#: includes/admin/class-s3-media-sync-admin.php
+msgid "Remove local copies of media that have already been synced to S3. This will delete original files and resized variants."
+msgstr "Xoá bản sao local của các media đã được đồng bộ lên S3. Thao tác này sẽ xoá file gốc và các kích thước đã tạo."
+
+#: includes/admin/class-s3-media-sync-admin.php
+msgid "Delete Local Media (synced only)"
+msgstr "Xoá Media local (chỉ file đã đồng bộ)"
+
+#: includes/admin/class-s3-media-sync-admin.php
+msgid "Stop Delete"
+msgstr "Dừng xoá"
+
+#: includes/admin/class-s3-media-sync-admin.php
+msgid "Mark All as Synced"
+msgstr "Đánh dấu tất cả là đã đồng bộ"
+
+#: includes/admin/class-s3-media-sync-admin.php
+msgid "Mark all media as synced without uploading to S3. Use this when images were already imported to S3 via another tool (rclone, aws cli, etc.) before activating the plugin."
+msgstr "Đánh dấu toàn bộ media là đã đồng bộ mà không upload lên S3. Dùng khi ảnh đã được import lên S3 bằng công cụ khác (rclone, aws cli...) trước khi kích hoạt plugin."
+
+#: includes/admin/class-s3-media-sync-admin.php
+msgid "Reset Sync Status"
+msgstr "Đặt lại trạng thái đồng bộ"
+
+#: includes/admin/class-s3-media-sync-admin.php
+msgid "Delete all s3_media_sync_synced meta — all files will be treated as not yet synced and Manual Sync can be run from the beginning."
+msgstr "Xoá toàn bộ meta s3_media_sync_synced — tất cả file sẽ được coi là chưa đồng bộ và có thể chạy lại đồng bộ thủ công từ đầu."
+
+#. AJAX response messages
+#: includes/admin/class-s3-media-sync-admin.php
+msgid "Insufficient permissions"
+msgstr "Không đủ quyền truy cập"
+
+#: includes/admin/class-s3-media-sync-admin.php
+msgid "Please provide Access Key, Secret Key, and Bucket."
+msgstr "Vui lòng cung cấp Access Key, Secret Key và Bucket."
+
+#: includes/admin/class-s3-media-sync-admin.php
+msgid "AWS SDK for PHP not found. Please install aws/aws-sdk-php via Composer."
+msgstr "Không tìm thấy AWS SDK for PHP. Vui lòng cài đặt aws/aws-sdk-php qua Composer."
+
+#: includes/admin/class-s3-media-sync-admin.php
+msgid "Could not create S3 client. Check your credentials."
+msgstr "Không thể tạo S3 client. Kiểm tra lại thông tin xác thực của bạn."
+
+#: includes/admin/class-s3-media-sync-admin.php
+msgid "Connection successful (bucket exists / accessible)."
+msgstr "Kết nối thành công (bucket tồn tại / có thể truy cập)."
+
+#. translators: %s: error message from the S3 SDK
+#: includes/admin/class-s3-media-sync-admin.php
+msgid "Connection failed: %s"
+msgstr "Kết nối thất bại: %s"
+
+#: includes/admin/class-s3-media-sync-admin.php
+msgid "Please configure Access Key, Secret Key, and Bucket in settings."
+msgstr "Vui lòng cấu hình Access Key, Secret Key và Bucket trong phần cài đặt."
+
+#: includes/admin/class-s3-media-sync-admin.php
+msgid "No synced attachments found to delete locally."
+msgstr "Không tìm thấy tệp đính kèm đã đồng bộ để xoá local."
+
+#. translators: %d: number of synced files that were reset
+#: includes/admin/class-s3-media-sync-admin.php
+msgid "Stopped & cleared. Reset %d synced files. Ready to start fresh."
+msgstr "Đã dừng và xoá. Đặt lại %d file đã đồng bộ. Sẵn sàng bắt đầu lại."
+
+#: includes/admin/class-s3-media-sync-admin.php
+msgid "Background sync offset reset. Click Start to sync from the beginning."
+msgstr "Đã đặt lại offset đồng bộ nền. Nhấn Bắt đầu để đồng bộ từ đầu."
+
+#. translators: %d: number of files whose sync status was deleted
+#: includes/admin/class-s3-media-sync-admin.php
+msgid "Reset complete. Deleted sync status for %d files. Background sync has also been reset."
+msgstr "Đặt lại hoàn tất. Đã xoá trạng thái đồng bộ của %d file. Đồng bộ nền cũng đã được đặt lại."
+
+#. translators: %d: number of files marked as synced
+#: includes/admin/class-s3-media-sync-admin.php
+msgid "Marked %d files as synced."
+msgstr "Đã đánh dấu %d file là đã đồng bộ."
+
+#: includes/admin/class-s3-media-sync-admin.php
+msgid "Invalid attachment ID"
+msgstr "ID tệp đính kèm không hợp lệ"
+
+#: includes/admin/class-s3-media-sync-admin.php
+msgid "S3 is not configured. Check Settings > S3 Media Sync."
+msgstr "S3 chưa được cấu hình. Kiểm tra Settings > S3 Media Sync."
+
+#: includes/admin/class-s3-media-sync-admin.php
+msgid "File does not exist on the server."
+msgstr "File không tồn tại trên server."
+
+#. translators: %s: date and time of successful sync
+#: includes/admin/class-s3-media-sync-admin.php
+msgid "Synced successfully at %s"
+msgstr "Đồng bộ thành công lúc %s"
+
+#. Attachment field / meta box
+#. translators: %s: date and time the file was synced
+#: includes/admin/class-s3-media-sync-admin.php
+msgid "Synced at %s"
+msgstr "Đã đồng bộ lúc %s"
+
+#: includes/admin/class-s3-media-sync-admin.php
+msgid "Not yet synced to S3"
+msgstr "Chưa đồng bộ lên S3"
+
+#: includes/admin/class-s3-media-sync-admin.php
+msgid "Re-sync"
+msgstr "Đồng bộ lại"
+
+#: includes/admin/class-s3-media-sync-admin.php
+msgid "Sync to S3"
+msgstr "Đồng bộ lên S3"
+
+#: includes/admin/class-s3-media-sync-admin.php
+msgid "Syncing..."
+msgstr "Đang đồng bộ..."
+
+#: includes/admin/class-s3-media-sync-admin.php
+msgid "Re-sync to S3"
+msgstr "Đồng bộ lại lên S3"
+
+#: includes/admin/class-s3-media-sync-admin.php
+msgid "Plugin is not enabled. Go to Settings > S3 Media Sync to configure."
+msgstr "Plugin chưa được bật. Vào Settings > S3 Media Sync để cấu hình."
+
+#. JS i18n strings (passed via wp_localize_script)
+#: includes/admin/class-s3-media-sync-admin.php
+msgid "Testing..."
+msgstr "Đang kiểm tra..."
+
+#: includes/admin/class-s3-media-sync-admin.php
+msgid "AJAX error"
+msgstr "Lỗi AJAX"
+
+#: includes/admin/class-s3-media-sync-admin.php
+msgid "Starting..."
+msgstr "Đang bắt đầu..."
+
+#: includes/admin/class-s3-media-sync-admin.php
+msgid "Stopped. Click Start to continue."
+msgstr "Đã dừng. Nhấn Bắt đầu để tiếp tục."
+
+#: includes/admin/class-s3-media-sync-admin.php
+msgid "Sync complete!"
+msgstr "Đồng bộ hoàn tất!"
+
+#: includes/admin/class-s3-media-sync-admin.php
+msgid "Server error — Auto-retry"
+msgstr "Lỗi server — Tự động thử lại"
+
+#: includes/admin/class-s3-media-sync-admin.php
+msgid "Batch error — skipped, continuing..."
+msgstr "Lỗi lô — đã bỏ qua, tiếp tục..."
+
+#: includes/admin/class-s3-media-sync-admin.php
+msgid "Syncing —"
+msgstr "Đang đồng bộ —"
+
+#: includes/admin/class-s3-media-sync-admin.php
+msgid "Deleting —"
+msgstr "Đang xoá —"
+
+#: includes/admin/class-s3-media-sync-admin.php
+msgid "Starting deletion..."
+msgstr "Đang bắt đầu xoá..."
+
+#: includes/admin/class-s3-media-sync-admin.php
+msgid "Deletion stopped. Removed:"
+msgstr "Đã dừng xoá. Đã xoá:"
+
+#: includes/admin/class-s3-media-sync-admin.php
+msgid "Done! Deleted local files:"
+msgstr "Hoàn tất! Đã xoá file local:"
+
+#: includes/admin/class-s3-media-sync-admin.php
+msgid "Error — Auto-retry"
+msgstr "Lỗi — Tự động thử lại"
+
+#: includes/admin/class-s3-media-sync-admin.php
+msgid "Failed. Deleted so far:"
+msgstr "Thất bại. Đã xoá được:"
+
+#: includes/admin/class-s3-media-sync-admin.php
+msgid "Refresh and click again to continue."
+msgstr "Làm mới trang và nhấn lại để tiếp tục."
+
+#: includes/admin/class-s3-media-sync-admin.php
+msgid "No background sync running."
+msgstr "Không có đồng bộ nền đang chạy."
+
+#: includes/admin/class-s3-media-sync-admin.php
+msgid "Done!"
+msgstr "Hoàn tất!"
+
+#: includes/admin/class-s3-media-sync-admin.php
+msgid "Stopped."
+msgstr "Đã dừng."
+
+#: includes/admin/class-s3-media-sync-admin.php
+msgid "Error:"
+msgstr "Lỗi:"
+
+#: includes/admin/class-s3-media-sync-admin.php
+msgid "Running..."
+msgstr "Đang chạy..."
+
+#: includes/admin/class-s3-media-sync-admin.php
+msgid "Error starting background sync."
+msgstr "Lỗi khi bắt đầu đồng bộ nền."
+
+#: includes/admin/class-s3-media-sync-admin.php
+msgid "Clearing..."
+msgstr "Đang xoá..."
+
+#: includes/admin/class-s3-media-sync-admin.php
+msgid "Processing..."
+msgstr "Đang xử lý..."
+
+#: includes/admin/class-s3-media-sync-admin.php
+msgid "Deleting..."
+msgstr "Đang xoá..."
+
+#: includes/admin/class-s3-media-sync-admin.php
+msgid "Manual sync offset reset."
+msgstr "Đã đặt lại offset đồng bộ thủ công."
+
+#: includes/admin/class-s3-media-sync-admin.php
+msgid "resume from ID"
+msgstr "tiếp tục từ ID"
+
+#: includes/admin/class-s3-media-sync-admin.php
+msgid "There is unfinished progress (last ID:"
+msgstr "Có tiến trình chưa hoàn thành (ID cuối:"
+
+#: includes/admin/class-s3-media-sync-admin.php
+msgid "Click Start to continue."
+msgstr "Nhấn Bắt đầu để tiếp tục."
+
+#: includes/admin/class-s3-media-sync-admin.php
+msgid "Unknown"
+msgstr "Không xác định"
+
+#: includes/admin/class-s3-media-sync-admin.php
+msgid "Deleted:"
+msgstr "Đã xoá:"
+
+#: includes/admin/class-s3-media-sync-admin.php
+msgid "last update:"
+msgstr "cập nhật lúc:"
+
+#: includes/admin/class-s3-media-sync-admin.php
+msgid "in"
+msgstr "sau"
+
+#: includes/admin/class-s3-media-sync-admin.php
+msgid "Delete local files of media already synced to S3? This action cannot be undone."
+msgstr "Xoá file local của media đã đồng bộ lên S3? Hành động này không thể hoàn tác."
+
+#: includes/admin/class-s3-media-sync-admin.php
+msgid "Start background sync? All unsynced attachments will be uploaded to S3 on the server."
+msgstr "Bắt đầu đồng bộ nền? Tất cả tệp chưa đồng bộ sẽ được upload lên S3 phía server."
+
+#: includes/admin/class-s3-media-sync-admin.php
+msgid "Stop all running actions, clear sync status, and reset everything? This cannot be undone."
+msgstr "Dừng tất cả các hành động đang chạy, xoá trạng thái đồng bộ và đặt lại mọi thứ? Hành động này không thể hoàn tác."
+
+#: includes/admin/class-s3-media-sync-admin.php
+msgid "Mark all media as synced without uploading to S3? Use this when images were already imported to S3 via another tool."
+msgstr "Đánh dấu toàn bộ media là đã đồng bộ mà không upload lên S3? Dùng khi ảnh đã được import lên S3 bằng công cụ khác."
+
+#: includes/admin/class-s3-media-sync-admin.php
+msgid "Delete all sync status? All files will be treated as not yet synced."
+msgstr "Xoá toàn bộ trạng thái đồng bộ? Tất cả file sẽ được coi là chưa đồng bộ."
