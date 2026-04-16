@@ -443,3 +443,51 @@ msgstr ""
 #: includes/admin/class-s3-media-sync-admin.php
 msgid "Delete all sync status? All files will be treated as not yet synced."
 msgstr ""
+
+#: includes/admin/class-s3-media-sync-admin.php
+msgid "Missing Local Files"
+msgstr ""
+
+#: includes/admin/class-s3-media-sync-admin.php
+msgid "Find attachments that exist in the database but whose file is missing on the server (cannot be uploaded to S3)."
+msgstr ""
+
+#: includes/admin/class-s3-media-sync-admin.php
+msgid "Find Missing Files"
+msgstr ""
+
+#: includes/admin/class-s3-media-sync-admin.php
+msgid "ID"
+msgstr ""
+
+#: includes/admin/class-s3-media-sync-admin.php
+msgid "Title"
+msgstr ""
+
+#: includes/admin/class-s3-media-sync-admin.php
+msgid "Expected path"
+msgstr ""
+
+#: includes/admin/class-s3-media-sync-admin.php
+msgid "Actions"
+msgstr ""
+
+#: includes/admin/class-s3-media-sync-admin.php
+msgid "(no path)"
+msgstr ""
+
+#: assets/js/admin.js
+msgid "Scanning..."
+msgstr ""
+
+#: assets/js/admin.js
+msgid "No missing files found."
+msgstr ""
+
+#: assets/js/admin.js
+msgid "missing file(s) found."
+msgstr ""
+
+#: assets/js/admin.js
+msgid "Edit"
+msgstr ""
