@@ -389,6 +389,47 @@
             } );
         } );
 
+        // ── Find Missing Files ────────────────────────────────────────────────
+        $('#s3-find-missing').on('click', function(e){
+            e.preventDefault();
+            var $btn    = $(this).prop('disabled', true).text(t('scanning', 'Scanning...'));
+            var $status = $('#s3-find-missing-status').text('');
+            var $wrap   = $('#s3-find-missing-results').hide();
+            var $tbody  = $('#s3-find-missing-tbody').empty();
+
+            $.post(S3MediaSync.ajax_url, {
+                action: 's3_media_sync_find_missing',
+                nonce:  S3MediaSync.nonce_find_missing
+            }, function(resp){
+                $btn.prop('disabled', false).text(t('find_missing', 'Find Missing Files'));
+                if (!resp || !resp.success) {
+                    $status.css('color','red').text(resp.data || 'Error');
+                    return;
+                }
+                var count = resp.data.count;
+                if (count === 0) {
+                    $status.css('color','#00a32a').text(t('no_missing_files', 'No missing files found.'));
+                    return;
+                }
+                $status.css('color','#d63638').text(count + ' ' + t('missing_files_found', 'missing file(s) found.'));
+                $.each(resp.data.missing, function(_i, item){
+                    var editLink = item.edit ? '<a href="'+item.edit+'" target="_blank">'+t('edit', 'Edit')+'</a>' : '—';
+                    $tbody.append(
+                        '<tr>' +
+                        '<td>#' + item.id + '</td>' +
+                        '<td>' + $('<span>').text(item.title).html() + '</td>' +
+                        '<td><code>' + $('<span>').text(item.path).html() + '</code></td>' +
+                        '<td>' + editLink + '</td>' +
+                        '</tr>'
+                    );
+                });
+                $wrap.show();
+            }).fail(function(){
+                $btn.prop('disabled', false).text(t('find_missing', 'Find Missing Files'));
+                $status.css('color','red').text(t('ajax_error', 'AJAX error'));
+            });
+        });
+
         // ── Mark All as Synced ────────────────────────────────────────────────
         $('#s3-media-sync-mark-all').on('click', function(e){
             e.preventDefault();

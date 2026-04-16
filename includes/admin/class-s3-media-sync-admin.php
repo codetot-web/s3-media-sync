@@ -30,7 +30,8 @@ class S3_Media_Sync_Admin {
         add_action( 'wp_ajax_s3_media_sync_bg_reset_offset', array( $this, 'ajax_bg_reset_offset' ) );
         add_action( 'wp_ajax_s3_media_sync_bg_clear_all',   array( $this, 'ajax_bg_clear_all' ) );
         add_action( 'wp_ajax_s3_media_sync_single',          array( $this, 'ajax_sync_single' ) );
-        add_action( 'wp_ajax_s3_media_sync_mark_all_synced', array( $this, 'ajax_mark_all_synced' ) );
+        add_action( 'wp_ajax_s3_media_sync_mark_all_synced',  array( $this, 'ajax_mark_all_synced' ) );
+        add_action( 'wp_ajax_s3_media_sync_find_missing',     array( $this, 'ajax_find_missing' ) );
     }
 
     public function load_synced_table_class() {
@@ -192,7 +193,8 @@ class S3_Media_Sync_Admin {
             'nonce_delete'   => wp_create_nonce( 's3_media_sync_delete' ),
             'nonce_reset'    => wp_create_nonce( 's3_media_sync_reset' ),
             'nonce_bg'       => wp_create_nonce( 's3_media_sync_bg' ),
-            'nonce_mark_all' => wp_create_nonce( 's3_media_sync_mark_all' ),
+            'nonce_mark_all'    => wp_create_nonce( 's3_media_sync_mark_all' ),
+            'nonce_find_missing'=> wp_create_nonce( 's3_media_sync_find_missing' ),
             'i18n'           => array(
                 'testing'                 => __( 'Testing...', 's3-media-sync' ),
                 'ajax_error'              => __( 'AJAX error', 's3-media-sync' ),
@@ -240,7 +242,12 @@ class S3_Media_Sync_Admin {
                 'confirm_mark_all'        => __( 'Mark all media as synced without uploading to S3? Use this when images were already imported to S3 via another tool.', 's3-media-sync' ),
                 'confirm_reset_status'    => __( 'Delete all sync status? All files will be treated as not yet synced.', 's3-media-sync' ),
                 'last_update'             => __( 'last update:', 's3-media-sync' ),
-                'in_seconds'              => __( 'in', 's3-media-sync' ),
+                'in_seconds'             => __( 'in', 's3-media-sync' ),
+                'scanning'               => __( 'Scanning...', 's3-media-sync' ),
+                'find_missing'           => __( 'Find Missing Files', 's3-media-sync' ),
+                'no_missing_files'       => __( 'No missing files found.', 's3-media-sync' ),
+                'missing_files_found'    => __( 'missing file(s) found.', 's3-media-sync' ),
+                'edit'                   => __( 'Edit', 's3-media-sync' ),
             ),
         ) );
         wp_enqueue_script( 's3-media-sync-admin' );
@@ -346,6 +353,23 @@ class S3_Media_Sync_Admin {
                 <button id="s3-media-sync-mark-all" class="button button-primary"><?php esc_html_e( 'Mark All as Synced', 's3-media-sync' ); ?></button>
                 <span id="s3-media-sync-mark-all-result" style="margin-left:12px;font-size:13px;"></span>
             </p>
+            <h2 style="margin-top:18px;"><?php esc_html_e( 'Missing Local Files', 's3-media-sync' ); ?></h2>
+            <p><?php esc_html_e( 'Find attachments that exist in the database but whose file is missing on the server (cannot be uploaded to S3).', 's3-media-sync' ); ?></p>
+            <p>
+                <button id="s3-find-missing" class="button"><?php esc_html_e( 'Find Missing Files', 's3-media-sync' ); ?></button>
+                <span id="s3-find-missing-status" style="margin-left:10px;font-size:13px;"></span>
+            </p>
+            <div id="s3-find-missing-results" style="margin-top:10px;display:none;">
+                <table class="widefat striped" style="max-width:900px;">
+                    <thead><tr>
+                        <th><?php esc_html_e( 'ID', 's3-media-sync' ); ?></th>
+                        <th><?php esc_html_e( 'Title', 's3-media-sync' ); ?></th>
+                        <th><?php esc_html_e( 'Expected path', 's3-media-sync' ); ?></th>
+                        <th><?php esc_html_e( 'Actions', 's3-media-sync' ); ?></th>
+                    </tr></thead>
+                    <tbody id="s3-find-missing-tbody"></tbody>
+                </table>
+            </div>
             <h2 style="margin-top:18px;"><?php esc_html_e( 'Reset Sync Status', 's3-media-sync' ); ?></h2>
             <p><?php esc_html_e( 'Delete all s3_media_sync_synced meta — all files will be treated as not yet synced and Manual Sync can be run from the beginning.', 's3-media-sync' ); ?></p>
             <p>
@@ -818,6 +842,43 @@ class S3_Media_Sync_Admin {
         );
 
         return $form_fields;
+    }
+
+    public function ajax_find_missing() {
+        if ( ! current_user_can( 'manage_options' ) ) {
+            wp_send_json_error( __( 'Insufficient permissions', 's3-media-sync' ) );
+        }
+        check_ajax_referer( 's3_media_sync_find_missing', 'nonce' );
+
+        global $wpdb;
+
+        $ids = $wpdb->get_col(
+            "SELECT p.ID FROM {$wpdb->posts} p
+             INNER JOIN {$wpdb->postmeta} pm ON pm.post_id = p.ID AND pm.meta_key = '_wp_attached_file'
+             WHERE p.post_type = 'attachment' AND p.post_status = 'inherit'
+             ORDER BY p.ID ASC"
+        );
+
+        $uploads  = wp_get_upload_dir();
+        $base     = untrailingslashit( $uploads['basedir'] );
+        $missing  = array();
+
+        foreach ( $ids as $id ) {
+            $file = get_attached_file( (int) $id );
+            if ( ! $file || ! file_exists( $file ) ) {
+                $missing[] = array(
+                    'id'    => (int) $id,
+                    'title' => get_the_title( (int) $id ),
+                    'path'  => $file ? str_replace( $base . '/', '', $file ) : __( '(no path)', 's3-media-sync' ),
+                    'edit'  => get_edit_post_link( (int) $id, 'raw' ),
+                );
+            }
+        }
+
+        wp_send_json_success( array(
+            'count'   => count( $missing ),
+            'missing' => $missing,
+        ) );
     }
 
     public function ajax_mark_all_synced() {
